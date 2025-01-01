@@ -213,7 +213,7 @@ jobs:
         id: date
         run: echo "date=$(date +'%d-%m-%y %H:%M:%S')" >> $GITHUB_OUTPUT
   
-      - name: Download kernel
+    
       - name: Download kernel
         run: |
            if [ $(echo ${{ github.event.inputs.kernel_url }} | grep "drive.") ]; then
