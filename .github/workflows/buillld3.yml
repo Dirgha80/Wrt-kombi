@@ -240,6 +240,10 @@ jobs:
         run: |  
              cd build
              tar -zvxf file.tar.gz -C /home/runner/work/Wrt-kombi/Wrt-kombi/core/kernel
+      - name: hapus dtb
+        run: |  
+             cd core/kernel/${{ inputs.kernel }}
+             rm -rf dtb-rockchip-* && rm -rf dtb-allwinner-*
       - name: Building OpenWrt
         run: |
           sudo chmod +x ulo2
