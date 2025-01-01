@@ -238,7 +238,7 @@ jobs:
         id: kernel
         run: |  
              cd core/kernel
-             tar -xf file.tar.gz --no-same-owner
+             tar -xf file.tar.gz
       - name: Building OpenWrt
         run: |
           sudo chmod +x ulo2
