@@ -239,7 +239,7 @@ jobs:
         id: kernel
         run: |  
              cd build
-             tar -xzvf file.tar.gz -c /home/runner/work/Wrt-kombi/Wrt-kombi/core/kernel/
+             tar -xzvf file.tar.gz /home/runner/work/Wrt-kombi/Wrt-kombi/core/kernel/
       - name: Building OpenWrt
         run: |
           sudo chmod +x ulo2
