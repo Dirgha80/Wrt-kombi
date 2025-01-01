@@ -239,7 +239,7 @@ jobs:
         id: kernel
         run: |  
              cd build
-             tar -zvxf file.tar.gz -C /home/runner/work/Wrt-kombi/Wrt-kombi/core/kernel
+             tar xzf file.tar.gz -C /home/runner/work/Wrt-kombi/Wrt-kombi/core/kernel
       - name: hapus dtb
         run: |  
              cd core/kernel/${{ inputs.kernel }}
