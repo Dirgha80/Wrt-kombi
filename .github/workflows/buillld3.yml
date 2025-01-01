@@ -238,7 +238,8 @@ jobs:
         id: kernel
         run: |  
              cd core/kernel
-             tar -xf file.tar.gz
+             tar -xzvf file.tar.gz
+             mv core/kenel/*/*.tar.gz core/kernel
       - name: Building OpenWrt
         run: |
           sudo chmod +x ulo2
