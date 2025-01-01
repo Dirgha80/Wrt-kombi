@@ -214,6 +214,7 @@ jobs:
         run: echo "date=$(date +'%d-%m-%y %H:%M:%S')" >> $GITHUB_OUTPUT
   
       - name: Download kernel
+      - name: Download kernel
         run: |
            if [ $(echo ${{ github.event.inputs.kernel_url }} | grep "drive.") ]; then
            if [ $(echo ${{ github.event.inputs.kernel_url }} | awk -F "/" '{print $6}') ]; then
@@ -221,25 +222,24 @@ jobs:
            else
             link_gdrive=$(echo ${{ github.event.inputs.kernel_url }} | awk -F "/" '{print $4}' | awk -F "?id=" '{print $2}'|awk -F "&export" '{print $1}')
            fi
-           sudo gdown ${link_gdrive} -O core/kernel/file.tar.gz
+           sudo gdown ${link_gdrive} -O build/file.tar.gz
            else
            if [ $(echo ${{ github.event.inputs.kernel_url }} | grep "mediafire.com") ]; then
-            sudo mediafire-dl ${{ github.event.inputs.kernel_url }} -o core/kernel/file.tar.gz
+            sudo mediafire-dl ${{ github.event.inputs.kernel_url }} -o build/file.tar.gz
             else
             if [ $(echo ${{ github.event.inputs.kernel_url }} | grep "mega.nz") ]; then
               file_mega=$(sudo mega-get ${{ github.event.inputs.kernel_url }} | awk -F: '{print $2}')
-              sudo mv ${file_mega} core/kernel/file.tar.gz
+              sudo mv ${file_mega} build/file.tar.gz
             else
-              sudo wget --no-check-certificate ${{ github.event.inputs.kernel_url }} -O core/kernel/file.tar.gz
+              sudo wget --no-check-certificate ${{ github.event.inputs.kernel_url }} -O build/file.tar.gz
             fi
            fi
            fi    
       - name: Extract kernel
         id: kernel
         run: |  
-             cd core/kernel
-             tar -xzvf file.tar.gz
-             mv core/kenel/*/*.tar.gz core/kernel
+             cd build
+             tar -xzvf file.tar.gz -c /home/runner/work/Wrt-kombi/Wrt-kombi/core/kernel/
       - name: Building OpenWrt
         run: |
           sudo chmod +x ulo2
