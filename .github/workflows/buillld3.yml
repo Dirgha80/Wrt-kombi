@@ -239,11 +239,13 @@ jobs:
         id: kernel
         run: |  
              cd build
-             tar xzf file.tar.gz -C /home/runner/work/Wrt-kombi/Wrt-kombi/core/kernel
+             tar -xzvf file.tar.gz -C /home/runner/work/Wrt-kombi/Wrt-kombi/core/kernel
              
       - name: Extract kernele
         run: |  
+             
              mv core/kernel/* core/kernel/${{ inputs.kernel }}
+             ( cd core/kernel/${{ inputs.kernel }} && rm -rf dtb-rockchip-*.tar.gz && rm -rf dtb-allwinner-*.tar.gz)
       - name: Building OpenWrt
         run: |
           sudo chmod +x ulo2
