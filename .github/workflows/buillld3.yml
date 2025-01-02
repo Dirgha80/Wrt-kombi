@@ -241,11 +241,9 @@ jobs:
              cd build
              tar xzf file.tar.gz -C /home/runner/work/Wrt-kombi/Wrt-kombi/core/kernel
              
-      - name: Extract kernel
+      - name: Extract kernele
         run: |  
-             cd core/kernel
-             sudo mkdir -p ${{ inputs.kernel }}
-             mv core/kernel/*/* core/kernel/${{ inputs.kernel }}
+             mv core/kernel/* core/kernel/${{ inputs.kernel }}
       - name: Building OpenWrt
         run: |
           sudo chmod +x ulo2
