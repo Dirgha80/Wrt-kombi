@@ -254,8 +254,8 @@ jobs:
              fi
       - name: Extract kernele
         run: |  
-             mv core/kernel/* core/kernel/${{ inputs.kernel }}
-             ( cd core/kernel/${{ inputs.kernel }} && rm -rf dtb-rockchip-*.tar.gz && rm -rf dtb-allwinner-*.tar.gz)
+            # mv core/kernel/* core/kernel/${{ inputs.kernel }}
+             cd core/kernel/* && rm -rf dtb-rockchip-*.tar.gz && rm -rf dtb-allwinner-*.tar.gz
       - name: Building OpenWrt
         run: |
           sudo chmod +x ulo2
