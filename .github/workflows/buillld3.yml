@@ -249,9 +249,15 @@ jobs:
              cd build
              if [ ${{ github.event.inputs.type_file }} = "tar.gz" ]; then
              tar -xzvf file.tar.gz -C /home/runner/work/Wrt-kombi/Wrt-kombi/core/kernel
-             cd core/kernel/* && rm -rf dtb-rockchip-*.tar.gz && rm -rf dtb-allwinner-*.tar.gz
+             # cd core/kernel/* && rm -rf dtb-rockchip-*.tar.gz && rm -rf dtb-allwinner-*.tar.gz
              else
              unzip file.zip -d /home/runner/work/Wrt-kombi/Wrt-kombi/core/kernel
+             fi
+      - name: Extract kernele
+        run: |  
+             if [ ${{ github.event.inputs.type_file }} = "tar.gz" ]; then
+             # mv core/kernel/* core/kernel/${{ inputs.kernel }}
+             cd core/kernel/* && rm -rf dtb-rockchip-*.tar.gz && rm -rf dtb-allwinner-*.tar.gz      
              fi
       - name: Building OpenWrt
         run: |
