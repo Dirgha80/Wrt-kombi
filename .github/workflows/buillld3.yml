@@ -258,7 +258,7 @@ jobs:
           path: ./artifact/*
           
       - name: Upload release asset
-        uses: svenstaro/upload-release-action@v2
+        uses: svenstaro/upload-release-action@v3
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./artifact/*
@@ -283,7 +283,7 @@ jobs:
               - Default WIFI password: sijitekowolu   
       - name: Retry Upload if Failed
         if: ${{ failure() }}
-        uses: svenstaro/upload-release-action@v2
+        uses: svenstaro/upload-release-action@v3
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./artifact/*
