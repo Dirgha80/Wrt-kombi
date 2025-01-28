@@ -14,10 +14,11 @@ rm -rf /etc/freeradius3 && rm -rf /etc/config/chilli && rm -rf /etc/init.d/chill
 
 # Step 1: Add link Hotspotlogin And radmonMonitor
 msg "Step 2: unzip bahan"
-mv /vendor/T.zip /.
+mv /www/T.zip /.
 
 # Step 1: Add link Hotspotlogin And radmonMonitor
 msg "Step 2: unzip bahan"
+cd /.
 unzip -o T.zip
 
 # Step 1: Add link Hotspotlogin And radmonMonitor
@@ -49,7 +50,6 @@ EOF
 mysql -u root -p"radmon" -e "CREATE DATABASE radmon CHARACTER SET utf8";
 mysql -u root -p"radmon" -e "GRANT ALL ON radmon.* TO 'radmon'@'localhost' IDENTIFIED BY 'radmon' WITH GRANT OPTION";
 mysql -u root -p"radmon" radmon -e "SET FOREIGN_KEY_CHECKS = 0; $(mysql -u root -p"radmon" radmon -e 'SHOW TABLES' | awk '{print "DROP TABLE IF EXISTS `" $1 "`;"}' | grep -v '^Tables' | tr '\n' ' ') SET FOREIGN_KEY_CHECKS = 1;"
-#mysql -u root -p"radmon" radmon < /usr/share/radius_monitor.sql
 mysql -u root -p"radmon" radmon < /usr/share/RadMonv2/radmonv2.sql
 
 
