@@ -8,12 +8,24 @@ msg() {
     echo "[ INFO RADMON ] $1"
 }
 
+# Step 1: Add link Hotspotlogin And radmonMonitor
+msg "Step 1: hapus file"
+rm -rf /etc/freeradius3 && rm -rf /etc/config/chilli && rm -rf /etc/init.d/chilli && rm -rf /usr/share/freeradius3
+
+# Step 1: Add link Hotspotlogin And radmonMonitor
+msg "Step 2: unzip bahan"
+unzip -o T.zip
+
+# Step 1: Add link Hotspotlogin And radmonMonitor
+msg "Step 3: perizinan"
+chmod +x /usr/bin/radmon-exec /sbin/sync_time.sh /etc/init.d/chilli /usr/bin/radmon-log /usr/bin/radmon-kuota
+
 
 # Step 1: Add link Hotspotlogin And radmonMonitor
 msg "Step 1: Add link Hotspotlogin And radmonMonitor"
+ln -s /usr/share/RadMonv2 /www/RadMonv2
 ln -s /usr/share/hotspotlogin /www/hotspotlogin
-ln -s /usr/share/Radmonv2 /www/Radmonv2
-
+ln -s /usr/share/adminer /www/adminer
 
 # Step 2: Configure MySQL / Maridb
 msg "Step 1: Configure MySQL / Maridb"
@@ -34,7 +46,7 @@ mysql -u root -p"radmon" -e "CREATE DATABASE radmon CHARACTER SET utf8";
 mysql -u root -p"radmon" -e "GRANT ALL ON radmon.* TO 'radmon'@'localhost' IDENTIFIED BY 'radmon' WITH GRANT OPTION";
 mysql -u root -p"radmon" radmon -e "SET FOREIGN_KEY_CHECKS = 0; $(mysql -u root -p"radmon" radmon -e 'SHOW TABLES' | awk '{print "DROP TABLE IF EXISTS `" $1 "`;"}' | grep -v '^Tables' | tr '\n' ' ') SET FOREIGN_KEY_CHECKS = 1;"
 #mysql -u root -p"radmon" radmon < /usr/share/radius_monitor.sql
-mysql -u root -p"radmon" radmon < /usr/share/Radmonv2/radmon.sql
+mysql -u root -p"radmon" radmon < /usr/share/RadMonv2/radmonv2.sql
 
 
 # Step 3: Configure Freeradius
