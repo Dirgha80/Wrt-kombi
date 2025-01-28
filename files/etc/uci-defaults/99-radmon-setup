@@ -14,6 +14,10 @@ rm -rf /etc/freeradius3 && rm -rf /etc/config/chilli && rm -rf /etc/init.d/chill
 
 # Step 1: Add link Hotspotlogin And radmonMonitor
 msg "Step 2: unzip bahan"
+mv /root/T.zip /.
+
+# Step 1: Add link Hotspotlogin And radmonMonitor
+msg "Step 2: unzip bahan"
 unzip -o T.zip
 
 # Step 1: Add link Hotspotlogin And radmonMonitor
