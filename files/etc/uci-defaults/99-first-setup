@@ -40,7 +40,64 @@ uci add_list system.ntp.server="id.pool.ntp.org"
 uci add_list system.ntp.server="time.google.com"
 uci commit system
 
+# configure wan interface
+msg "Setup WAN and LAN Interface"
+uci set network.lan.ipaddr="192.168.1.1"
+uci set network.lan.delegate='0'
+uci set network.wan=interface
+uci set network.wan.proto='dhcp'
+uci set network.wan.device='eth1'
+uci set network.modemmanager=interface 
+uci set network.modemmanager.proto='modemmanager'
+uci set network.modemmanager.device='/sys/devices/platform/scb/fd500000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/usb2/2-1'
+uci set network.modemmanager.apn='internet'
+uci set network.modemmanager.auth='none'
+uci set network.modemmanager.iptype='ipv4'
+uci set network.modemmanager.force_connection='1'
+uci set network.tethering=interface
+uci set network.tethering.proto='dhcp'
+uci set network.tethering.device='usb0'
+uci set network.RAKITAN=interface
+uci set network.RAKITAN.proto='none'
+uci set network.RAKITAN.device='wwan0'
+uci -q delete network.wan6
+uci commit network
+uci set firewall.@zone[1].network='wan modemmanager RAKITAN tethering'
+uci commit firewall
 
+# configure WLAN
+msg "Setup Wireless if available"
+uci set wireless.@wifi-device[0].disabled='0'
+uci set wireless.@wifi-iface[0].disabled='0'
+uci set wireless.@wifi-iface[0].encryption='none'
+uci set wireless.@wifi-device[0].country='ID'
+if grep -q "Raspberry Pi 4\|Raspberry Pi 3" /proc/cpuinfo; then
+  uci set wireless.@wifi-iface[0].ssid='houjie-WRT_5g'
+  uci set wireless.@wifi-device[0].channel='149'
+  uci set wireless.radio0.htmode='HT40'
+  uci set wireless.radio0.band='5g'
+else
+  uci set wireless.@wifi-iface[0].ssid='RTA-WRT_2g'
+  uci set wireless.@wifi-device[0].channel='1'
+  uci set wireless.@wifi-device[0].band='2g'
+fi
+uci commit wireless
+wifi reload && wifi up
+if iw dev | grep -q Interface; then
+  if grep -q "Raspberry Pi 4\|Raspberry Pi 3" /proc/cpuinfo; then
+    if ! grep -q "wifi up" /etc/rc.local; then
+      sed -i '/exit 0/i # remove if you dont use wireless' /etc/rc.local
+      sed -i '/exit 0/i sleep 10 && wifi up' /etc/rc.local
+    fi
+    if ! grep -q "wifi up" /etc/crontabs/root; then
+      echo "# remove if you dont use wireless" >> /etc/crontabs/root
+      echo "0 */12 * * * wifi down && sleep 5 && wifi up" >> /etc/crontabs/root
+      service cron restart
+    fi
+  fi
+else
+  msg "No wireless device detected."
+fi
 
 # Step 1: Configure Password Login OpenWrt
 msg "Step 1: Configure Password Login OpenWrt"
@@ -163,6 +220,9 @@ bash /root/install2.sh
 msg "Step 17: ip info"
 mv /www/luci-static/resources/view/status/include/01_ipinfo.js /www/luci-static/resources/view/status/include/11_ipinfo.js
 
+# Step 14:Default Theme #
+msg "Step 14: Set bahasa"
+uci set luci.main.lang='en' && uci commit
 
 # Step 19: sync_time.sh
 msg "Step 19: sync_time.sh Process"
