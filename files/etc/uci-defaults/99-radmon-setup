@@ -2,6 +2,16 @@
 # Radius Monitor V2 Auto Installer
 # Author: Maizil <https://github.com/maizil41>
 
+# ENV
+exec > /root/radmon-setup.log 2>&1
+
+msg() {
+    local DATE=$(date '+%d %B %Y %T')
+    echo "[ INFO RADMON ] $1"
+}
+
+
+
 RED="\e[1;91m"
 PURPLE="\e[1;95m"
 CYAN="\e[1;96m"
