@@ -67,37 +67,46 @@ uci commit firewall
 
 # configure WLAN
 msg "Setup Wireless if available"
-uci set wireless.@wifi-device[0].disabled='0'
-uci set wireless.@wifi-iface[0].disabled='0'
-uci set wireless.@wifi-iface[0].encryption='none'
-uci set wireless.@wifi-device[0].country='ID'
-uci set wireless.@wifi-iface[0].mode='ap'
-if grep -q "Raspberry Pi 4\|Raspberry Pi 3" /proc/cpuinfo; then
-  uci set wireless.@wifi-iface[0].ssid='houjie-WRT_5g'
-  uci set wireless.@wifi-device[0].channel='149'
-  uci set wireless.radio0.htmode='VHT80'
-else
-  uci set wireless.@wifi-iface[0].ssid='HJ-WRt'
-  uci set wireless.@wifi-device[0].channel='1'
-  uci set wireless.@wifi-device[0].htmode='HT20
+
+PASS_WIFI="sijitekowolu"
+COUNTRY="ID"
+
+echo "[WiFi-Setup] Deteksi dan konfigurasi WiFi..."
+
+# 2.4GHz - radio0
+if [ -e /sys/class/ieee80211/phy0 ]; then
+  echo "[WiFi] Mengatur radio0 (2.4GHz)"
+  uci set wireless.radio0.disabled='0'
+  uci set wireless.radio0.channel='1'
+  uci set wireless.radio0.htmode='HT20'
+  uci set wireless.radio0.country="$COUNTRY"
+
+  uci set wireless.@wifi-iface[0].device='radio0'
+  uci set wireless.@wifi-iface[0].mode='ap'
+  uci set wireless.@wifi-iface[0].ssid='Houjie-2G'
+  uci set wireless.@wifi-iface[0].encryption='psk2'
+  uci set wireless.@wifi-iface[0].key="$PASS_WIFI"
+  uci set wireless.@wifi-iface[0].disabled='0'
 fi
+
+# 5GHz - radio1
+if [ -e /sys/class/ieee80211/phy1 ]; then
+  echo "[WiFi] Mengatur radio1 (5GHz)"
+  uci set wireless.radio1.disabled='0'
+  uci set wireless.radio1.channel='149'
+  uci set wireless.radio1.htmode='VHT80'
+  uci set wireless.radio1.country="$COUNTRY"
+
+  uci add wireless wifi-iface
+  uci set wireless.@wifi-iface[-1].device='radio1'
+  uci set wireless.@wifi-iface[-1].mode='ap'
+  uci set wireless.@wifi-iface[-1].ssid='Houjie-5G'
+  uci set wireless.@wifi-iface[-1].encryption='psk2'
+  uci set wireless.@wifi-iface[-1].key="$PASS_WIFI"
+  uci set wireless.@wifi-iface[-1].disabled='0'
+fi
+
 uci commit wireless
-wifi reload && wifi up
-if iw dev | grep -q Interface; then
-  if grep -q "Raspberry Pi 4\|Raspberry Pi 3" /proc/cpuinfo; then
-    if ! grep -q "wifi up" /etc/rc.local; then
-      sed -i '/exit 0/i # remove if you dont use wireless' /etc/rc.local
-      sed -i '/exit 0/i sleep 10 && wifi up' /etc/rc.local
-    fi
-    if ! grep -q "wifi up" /etc/crontabs/root; then
-      echo "# remove if you dont use wireless" >> /etc/crontabs/root
-      echo "0 */12 * * * wifi down && sleep 5 && wifi up" >> /etc/crontabs/root
-      service cron restart
-    fi
-  fi
-else
-  msg "No wireless device detected."
-fi
 
 # Step 1: Configure Password Login OpenWrt
 msg "Step 1: Configure Password Login OpenWrt"
@@ -117,7 +126,7 @@ sed -i -e '/12d1:15c1/,+5d' /etc/usb-mode.json
 
 # Step 4: Remove dw5821e usb-modeswitch
 msg "Step 4: Remove dw5821e usb-modeswitch"
-sed -i -e '/413c:81d7/,+5d' /etc/usb-mode.json
+[ -f /etc/usb-mode.json ] && sed -i -e '/12d1:15c1/,+5d' /etc/usb-mode.json
 
 
 # Step 5: Disable /etc/config/xmm-modem
@@ -173,7 +182,7 @@ ln -s / /www/tinyfm/rootfs
 msg "Step 10: ganti banner"
 rm -rf /etc/profile
 rm -rf /etc/profile.d/30-sysinfo.sh
-mv /etc/profile1 /etc/profile
+[ -f /etc/profile1 ] && mv /etc/profile1 /etc/profile
 mv /etc/profile.d/30-sysinfo1.sh /etc/profile.d/30-sysinfo.sh
 chmod +x /etc/profile.d/30-sysinfo.sh
 # chmod +x /etc/profile
@@ -223,8 +232,12 @@ msg "Step 13: Run Another Process"
 bash /root/install2.sh
 
 # Step 17: Run
-msg "Step 15: ganti nama minoho ke nikki"
+msg "Step 15: ganti nama mihomo ke nikki"
 mv /etc/mihomo /etc/nikki
+
+# Step 17: Run
+msg "Step 17: add port"
+chmod +x /root/addport.sh && /root/addport.sh
 
 
 # Step 19: sync_time.sh
@@ -236,3 +249,5 @@ msg "First Setup settings successfully applied..."
 
 # Remove this script after successful execution
 rm -f /etc/uci-defaults/$(basename $0)
+
+exit 0
