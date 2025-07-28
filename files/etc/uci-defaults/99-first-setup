@@ -256,6 +256,9 @@ file_tujuan="$direktori_tujuan$nama_baru"
 if [ ! -f "$file_tujuan" ]; then
   mv "$file_sumber" "$file_tujuan"
   echo "File dipindahkan dan diganti nama menjadi: $nama_baru"
+ # Berikan perizinan eksekusi
+  chmod +x "$file_tujuan"
+  echo "Perizinan eksekusi diberikan untuk file $nama_baru"
 else
   echo "File dengan nama $nama_baru sudah ada, proses dilewati."
 fi
