@@ -259,18 +259,33 @@ download_imagebuilder() {
         ARCH_3="x86_64"
     fi
 
-    # Downloading imagebuilder files
-    download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.tar.zst"
-    curl -fsSOL ${download_file}
-    [[ "${?}" -eq "0" ]] || error_msg "Download failed: [ ${download_file} ]"
-    echo -e "${SUCCESS} Download Base ${op_branch} ${target_name} successfully!"
+    # Deteksi ekstensi file dan perintah ekstrak berdasarkan versi OpenWrt
+if echo "$op_branch" | grep -q "^24\."; then
+    FILE_EXT="tar.zst"
+    TAR_CMD="tar --zstd -xvf"
+elif echo "$op_branch" | grep -q "^23\."; then
+    FILE_EXT="tar.xz"
+    TAR_CMD="tar -xvJf"
+else
+    echo "[ERROR] Versi tidak dikenali untuk op_branch: $op_branch"
+    exit 1
+fi
 
-    # Unzip and change the directory name
-    tar --zstd -xvf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.zst
-    mv -f *-imagebuilder-* ${openwrt_dir}
+# Nama file & URL imagebuilder
+download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${FILE_EXT}"
+imagebuilder_file="${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${FILE_EXT}"
 
-    sync && sleep 3
-    echo -e "${INFO} [ ${make_path} ] directory status: $(ls -al 2>/dev/null)"
+# Download
+curl -fsSOL "${download_file}"
+[[ "$?" -eq 0 ]] || error_msg "Download failed: [ ${download_file} ]"
+echo -e "${SUCCESS} Download Base ${op_branch} ${target_name} successfully!"
+
+# Ekstrak dan ubah nama direktori
+$TAR_CMD "${imagebuilder_file}" && sync && rm -f "${imagebuilder_file}"
+mv -f *-imagebuilder-* "${openwrt_dir}"
+
+sync && sleep 3
+echo -e "${INFO} [ ${make_path} ] directory status: $(ls -al 2>/dev/null)"
 }
 
 # Adjust related files in the ImageBuilder directory
