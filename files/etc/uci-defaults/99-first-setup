@@ -75,7 +75,7 @@ echo "[WiFi-Setup] Deteksi dan konfigurasi WiFi..."
 
 # 2.4GHz - radio0
 if [ -e /sys/class/ieee80211/phy0 ]; then
-  echo "[WiFi] Mengatur radio0 (2.4GHz)"
+  msg "[WiFi] Mengatur radio0 (2.4GHz)"
   uci set wireless.radio0.disabled='0'
   uci set wireless.radio0.channel='1'
   uci set wireless.radio0.htmode='HT20'
@@ -91,7 +91,7 @@ fi
 
 # 5GHz - radio1
 if [ -e /sys/class/ieee80211/phy1 ]; then
-  echo "[WiFi] Mengatur radio1 (5GHz)"
+  msg "[WiFi] Mengatur radio1 (5GHz)"
   uci set wireless.radio1.disabled='0'
   uci set wireless.radio1.channel='149'
   uci set wireless.radio1.htmode='VHT80'
@@ -255,12 +255,12 @@ file_tujuan="$direktori_tujuan$nama_baru"
 # Cek apakah file_tujuan sudah ada
 if [ ! -f "$file_tujuan" ]; then
   mv "$file_sumber" "$file_tujuan"
-  echo "File dipindahkan dan diganti nama menjadi: $nama_baru"
+  msg "File dipindahkan dan diganti nama menjadi: $nama_baru"
  # Berikan perizinan eksekusi
   chmod +x "$file_tujuan"
-  echo "Perizinan eksekusi diberikan untuk file $nama_baru"
+  msg "Perizinan eksekusi diberikan untuk file $nama_baru"
 else
-  echo "File dengan nama $nama_baru sudah ada, proses dilewati."
+  msg "File dengan nama $nama_baru sudah ada, proses dilewati."
 fi
 
 
