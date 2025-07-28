@@ -243,6 +243,24 @@ chmod +x /root/addport.sh && /root/addport.sh
 # Step 19: sync_time.sh
 msg "Step 16: sync_time.sh Process"
 chmod +x /sbin/sync_time.sh
+
+# Step 20: sync_time.sh
+msg "Step 21: cek file cpustat
+# Path asal dan nama file sumber
+file_sumber="/usr/bin/cpustat1"
+# Direktori tujuan dan nama baru
+direktori_tujuan="/usr/bin/"
+nama_baru="cpustat"
+file_tujuan="$direktori_tujuan$nama_baru"
+# Cek apakah file_tujuan sudah ada
+if [ ! -f "$file_tujuan" ]; then
+  mv "$file_sumber" "$file_tujuan"
+  echo "File dipindahkan dan diganti nama menjadi: $nama_baru"
+else
+  echo "File dengan nama $nama_baru sudah ada, proses dilewati."
+fi
+
+
 # Log success
 msg "First Setup settings successfully applied..."
 
