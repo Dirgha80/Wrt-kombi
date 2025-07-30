@@ -228,8 +228,8 @@ msg "Step 15: Set bahasa"
 uci set luci.main.lang='en' && uci commit
 
 # Step 17: Run Another Process
-msg "Step 13: Run Another Process"
-bash /root/install2.sh
+# msg "Step 13: Run Another Process"
+# bash /root/install2.sh
 
 # Step 17: Run
 msg "Step 15: ganti nama mihomo ke nikki"
