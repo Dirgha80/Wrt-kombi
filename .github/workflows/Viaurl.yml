@@ -225,6 +225,7 @@ jobs:
           echo "RELEASES_TAG2=$RELEASES_TAG2" >> ${GITHUB_ENV}
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
+          
       - name: Download external ROOTFS (if provided)
         if: ${{ inputs.rootfs_url != '' }}
         run: |
