@@ -216,7 +216,7 @@ jobs:
           mkdir -p imagebuilder
           cd imagebuilder
           mkdir -p compiled_images
-          curl -L "${{ inputs.rootfs_url }}" -o compiled_images/rootfs.tar.gz
+          curl -L "${{ inputs.rootfs_url }}" -o compiled_images/external-rootfs.tar.gz
           echo "[✓] Download selesai: $(ls -lh compiled_images)"    
   
       - name: Build Rootfs [ ${{ inputs.releases_branch }} ]
@@ -260,8 +260,9 @@ jobs:
           echo "[⚠️] Tidak ditemukan file .img.gz"
          fi
          else
-         if [ -f compiled_images/rootfs.tar.gz ]; then
-          echo "[✓] Menggunakan rootfs dari URL"
+         if [ -f compiled_images/external-rootfs.tar.gz ]; then
+         echo "[✓] Menggunakan rootfs dari URL"
+         cp compiled_images/external-rootfs.tar.gz compiled_images/rootfs.tar.gz
          else
          files=(bin/targets/*/*/*rootfs.tar.gz)
          if [ ${#files[@]} -gt 0 ]; then
