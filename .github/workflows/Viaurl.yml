@@ -213,6 +213,7 @@ jobs:
         if: ${{ inputs.rootfs_url != '' }}
         run: |
           echo -e "[\033[94m INFO \033[0m] Mengunduh rootfs dari: ${{ inputs.rootfs_url }}"
+          mkdir -p imagebuilder
           cd imagebuilder
           mkdir -p compiled_images
           curl -L "${{ inputs.rootfs_url }}" -o compiled_images/external-rootfs.tar.gz
