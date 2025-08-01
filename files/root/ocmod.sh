@@ -5,7 +5,7 @@ LUCI_PATH="/usr/lib/lua/luci"
 CTRL_FILE="$LUCI_PATH/controller/openclash.lua"
 FORM_CLIENT_FILE="$LUCI_PATH/model/cbi/openclash/settings.lua"
 VIEW_OCEDITOR="$LUCI_PATH/view/openclash/oceditor.htm"
-STATUS_FILE="/www/luci-static/resources/view/openclash/status.htm"  # Ubah jika lokasi berbeda
+STATUS_FILE="/view/openclash/status.htm"  # Ubah jika lokasi berbeda
 
 # === PATCH settings.lua ===
 echo "[✔] Menghapus deskripsi panjang dari settings.lua"
