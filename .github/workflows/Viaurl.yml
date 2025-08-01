@@ -211,7 +211,7 @@ jobs:
         
       - name: Build Rootfs [ ${{ inputs.releases_branch }} ]
         id: imagebuilder
-        if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
+        if: ${{ steps.init.outputs.status == 'success' && inputs.rootfs_url == '' && !cancelled() }}
         run: |
           echo -e "[\033[95m STEPS \033[0m] Building Firmware And Rootfs"
           TARGET_NAME="${{ env.TARGET_NAME }}"
