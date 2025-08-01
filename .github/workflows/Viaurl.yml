@@ -226,14 +226,6 @@ jobs:
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
           
-      - name: Download external ROOTFS (if provided)
-        if: ${{ inputs.rootfs_url != '' }}
-        run: |
-          echo -e "[\033[94m INFO \033[0m] Mengunduh rootfs dari: ${{ inputs.rootfs_url }}"
-          cd imagebuilder
-          mkdir -p compiled_images
-          curl -L "${{ inputs.rootfs_url }}" -o compiled_images/external-rootfs.tar.gz
-          echo "[✓] Download selesai: $(ls -lh compiled_images)"
 
       - name: Clear server space
         if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
@@ -242,6 +234,14 @@ jobs:
           rm -rf $(ls . | grep -v "^bin$" | xargs) 2>/dev/null
           df -hT ${PWD}
 
+      - name: Download external ROOTFS (if provided)
+        if: ${{ inputs.rootfs_url != '' }}
+        run: |
+          echo -e "[\033[94m INFO \033[0m] Mengunduh rootfs dari: ${{ inputs.rootfs_url }}"
+          cd imagebuilder
+          mkdir -p compiled_images
+          curl -L "${{ inputs.rootfs_url }}" -o compiled_images/external-rootfs.tar.gz
+          echo "[✓] Download selesai: $(ls -lh compiled_images)"    
 
       - name: Prepare file First
         run: |
