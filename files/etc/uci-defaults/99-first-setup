@@ -266,9 +266,11 @@ fi
 # Step 22: Run
 msg "Step 22: add ocmod"
 chmod +x /root/ocmod.sh && /root/ocmod.sh
+
 # Step 23: Run
 msg "Step 23: hapus file"
-rm -rf /root/ocmod.sh addport.sh
+rm -rf /root/ocmod.sh /root/addport.sh
+
 # Log success
 msg "First Setup settings successfully applied..."
 
