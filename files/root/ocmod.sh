@@ -3,13 +3,14 @@
 # === KONFIGURASI ===
 LUCI_PATH="/usr/lib/lua/luci"
 CTRL_FILE="$LUCI_PATH/controller/openclash.lua"
-FORM_CLIENT_FILE="$LUCI_PATH/model/cbi/openclash/settings.lua"
+FORM_SETTINGS_FILE="$LUCI_PATH/model/cbi/openclash/settings.lua"
 VIEW_OCEDITOR="$LUCI_PATH/view/openclash/oceditor.htm"
+FORM_CLIENT_FILE="$LUCI_PATH/model/cbi/openclash/client.lua"
 STATUS_FILE="/view/openclash/status.htm"  # Ubah jika lokasi berbeda
 
 # === PATCH settings.lua ===
 echo "[✔] Menghapus deskripsi panjang dari settings.lua"
-sed -i 's/^m\.description.*/-- m.description = deleted/' "$FORM_CLIENT_FILE"
+sed -i 's/^m\.description.*/-- m.description = deleted/' "$FORM_SETTINGS_FILE"
 
 # === PATCH controller.lua ===
 echo "[✔] Mengganti urutan menu 'log' menjadi 100"
@@ -20,6 +21,22 @@ grep -q 'openclash", "oceditor"' "$CTRL_FILE" || {
   sed -i '/acl_depends.*openclash.*}/a\
   entry({"admin", "services", "openclash", "oceditor"}, template("openclash/oceditor"), _("Config Editor"), 90).leaf = true' "$CTRL_FILE"
 }
+
+# === PATCH client.lua ===
+echo "[✔] Menghapus deskripsi panjang dari settings.lua"
+if [ -f "$FORM_CLIENT_FILE" ]; then
+  # Ubah judul dan deskripsi ke kosong
+  sed -i 's/translate("OpenClash")/translate(" ")/' "$FORM_CLIENT_FILE"
+  sed -i 's/translate("A Clash Client For OpenWrt")/translate(" ")/' "$FORM_CLIENT_FILE"
+
+  # Hapus deskripsi
+  sed -i 's/^m\.description.*/-- m.description = deleted/' "$FORM_CLIENT_FILE"
+
+  # Hapus baris developer
+  sed -i '/m:append(Template("openclash\/developer"))/d' "$FORM_CLIENT_FILE"
+else
+  echo "[⚠️] File $FORM_CLIENT_FILE tidak ditemukan, lewati patch judul dan developer"
+fi
 
 # === BUAT VIEW oceditor.htm ===
 if [ ! -f "$VIEW_OCEDITOR" ]; then
