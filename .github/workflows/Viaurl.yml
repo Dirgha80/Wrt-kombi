@@ -208,6 +208,7 @@ jobs:
       - name: Mengatur tanggal
         id: date
         run: echo "date=$(date +'%d-%m-%y %H:%M:%S')" >> $GITHUB_OUTPUT
+        
       - name: Download external ROOTFS (if provided)
         if: ${{ inputs.rootfs_url != '' }}
         run: |
