@@ -244,7 +244,18 @@ jobs:
          echo "[ℹ️] Membersihkan file sementara kecuali bin/ dan compiled_images/"
          find . -mindepth 1 -maxdepth 1 ! -name 'bin' ! -name 'compiled_images' -exec rm -rf {} +
          df -hT
-    
+
+      - name: Set Release Tags
+        id: setrelease
+        run: |
+         RELEASES_BRANCH="${{ inputs.releases_branch }}"
+         echo "RELEASES_BRANCH=$RELEASES_BRANCH" >> $GITHUB_ENV
+         echo "RELEASES_TAG=${RELEASES_BRANCH/:/_}" >> $GITHUB_ENV
+         echo "RELEASES_TAG2=${RELEASES_BRANCH#*:}" >> $GITHUB_ENV
+
+         echo "[✓] RELEASES_TAG  : ${RELEASES_BRANCH/:/_}"
+         echo "[✓] RELEASES_TAG2 : ${RELEASES_BRANCH#*:}"
+
       
       - name: Prepare file First
         run: |
