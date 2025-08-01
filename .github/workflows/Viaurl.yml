@@ -247,19 +247,33 @@ jobs:
       
       - name: Prepare file First
         run: |
-          cd imagebuilder
-          echo -e "[\033[95m STEPS \033[0m] Prepare File.."
-          mkdir -p compiled_images/mod
-          if [[ "${{ env.TARGET_NAME }}" != "amlogic" ]]; then
-            for file in bin/targets/*/*/*.img.gz; do mv "$file" compiled_images; done
+         cd imagebuilder
+         echo -e "[\033[95m STEPS \033[0m] Prepare File.."
+         mkdir -p compiled_images/mod
+         shopt -s nullglob
+
+         if [[ "${{ env.TARGET_NAME }}" != "amlogic" ]]; then
+         files=(bin/targets/*/*/*.img.gz)
+         if [ ${#files[@]} -gt 0 ]; then
+         mv "${files[@]}" compiled_images
+         else
+          echo "[⚠️] Tidak ditemukan file .img.gz"
+         fi
+         else
+         if [ -f compiled_images/external-rootfs.tar.gz ]; then
+          echo "[✓] Menggunakan rootfs dari URL"
+         else
+         files=(bin/targets/*/*/*rootfs.tar.gz)
+         if [ ${#files[@]} -gt 0 ]; then
+          mv "${files[@]}" compiled_images
           else
-            if [ -f compiled_images/external-rootfs.tar.gz ]; then
-              echo "[✓] Menggunakan rootfs dari URL"
-            else
-              for file in bin/targets/*/*/*rootfs.tar.gz; do mv "$file" compiled_images; done
-            fi
+          echo "[⚠️] Tidak ditemukan file rootfs.tar.gz"
+           fi
           fi
-          echo -e "INFO files list: \n$(ls -l compiled_images 2>/dev/null)"
+         fi
+
+         echo -e "INFO files list: \n$(ls -l compiled_images 2>/dev/null)"
+
 
 
       - name: Packaging OpenWrt For Amlogic
