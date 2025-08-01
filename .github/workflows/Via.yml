@@ -6,7 +6,7 @@
 #                https://downloads.immortalwrt.org/releases
 #=====================================================================================
 
-name: Build via URL
+name: Build via URL22
 
 on:
   repository_dispatch:
@@ -225,15 +225,7 @@ jobs:
           echo "RELEASES_TAG2=$RELEASES_TAG2" >> ${GITHUB_ENV}
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
-          
 
-      - name: Clear server space
-        if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
-        run: |
-          cd imagebuilder
-          rm -rf $(ls . | grep -v "^bin$" | xargs) 2>/dev/null
-          df -hT ${PWD}
-          
       - name: Download external ROOTFS (if provided)
         if: ${{ inputs.rootfs_url != '' }}
         run: |
@@ -242,7 +234,17 @@ jobs:
           cd imagebuilder
           mkdir -p compiled_images
           curl -L "${{ inputs.rootfs_url }}" -o compiled_images/external-rootfs.tar.gz
-          echo "[✓] Download selesai: $(ls -lh compiled_images)"    
+          echo "[✓] Download selesai: $(ls -lh compiled_images)"        
+
+     
+      - name: Clear temporary files (safe)
+        if: always()
+        run: |
+         cd imagebuilder
+         echo "[ℹ️] Membersihkan file sementara kecuali bin/ dan compiled_images/"
+         find . -mindepth 1 -maxdepth 1 ! -name 'bin' ! -name 'compiled_images' -exec rm -rf {} +
+         df -hT
+    
       
       - name: Prepare file First
         run: |
