@@ -95,11 +95,12 @@ on:
         options:
           - imagebuilder.sh
           - imagebuilderA.sh
-          - imagebuilderB.sh  
-      rootfs_url:
+          - imagebuilderB.sh
+      rootfs_url:    
         description: "Optional: Download ROOTFS archive from URL"
         required: false
         default: ""
+    
 
 
 env:
@@ -256,7 +257,7 @@ jobs:
             fi
           fi
           echo -e "INFO files list: \n$(ls -l compiled_images 2>/dev/null)"
-          
+
 
       - name: Packaging OpenWrt For Amlogic
         id: repack
