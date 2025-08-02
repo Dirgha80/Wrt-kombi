@@ -7,7 +7,7 @@ FORM_SETTINGS_FILE="$LUCI_PATH/model/cbi/openclash/settings.lua"
 VIEW_OCEDITOR="$LUCI_PATH/view/openclash/oceditor.htm"
 FORM_CLIENT_FILE="$LUCI_PATH/model/cbi/openclash/client.lua"
 STATUS_FILE="$LUCI_PATH/view/openclash/status.htm"
-LOG_FILE="/var/log/openclash_patch.log"
+LOG_FILE="/root/houjie-wrt.log"
 
 # Fungsi untuk menulis log
 log_message() {
