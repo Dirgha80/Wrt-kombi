@@ -119,6 +119,7 @@ create_safe_openclash_symlink() {
   fi
   if [ -e "$link" ]; then
     echo "[!] Menghapus $link karena bukan symlink yang benar"
+    log_message "Menghapus $link karena bukan symlink yang benar"
     rm -rf "$link"
   fi
   ln -sf "$target" "$link" && echo "[+] Symlink dibuat: $link → $target"
