@@ -26,29 +26,36 @@ else
 fi
 
 # === PATCH controller.lua ===
-echo "[✔] Patch controller.lua"
-# Ganti urutan menu log
-sed -i 's/\(entry({.*"log".*Server Logs".*\), *90)/\1, 100)/' "$CTRL_FILE"
+echo "[✔] Patch controller.lua (sisipkan oceditor setelah config)"
 
-# Pindahkan atau tambahkan entry oceditor ke bawah config
-if grep -q 'openclash", "oceditor"' "$CTRL_FILE"; then
-  echo "[✓] Memindahkan entry oceditor ke bawah config"
-  OC_LINE=$(grep 'openclash", "oceditor"' "$CTRL_FILE")
+# Baris target yang ingin disisipkan setelahnya
+TARGET_LINE='entry({"admin", "services", "openclash", "config"},form("openclash/config"),_("Config Manage"), 80).leaf = true'
+
+# Entry baru untuk oceditor
+OCEDITOR_LINE='entry({"admin", "services", "openclash", "oceditor"}, template("openclash/oceditor"), _("Config Editor"), 90).leaf = true'
+
+if [ -f "$CTRL_FILE" ]; then
+  cp "$CTRL_FILE" "${CTRL_FILE}.bak"
   sed -i '/openclash", "oceditor"/d' "$CTRL_FILE"
-  sed -i "/openclash\", \"config\".*/a\\
-  $OC_LINE" "$CTRL_FILE"
+  if grep -qF "$TARGET_LINE" "$CTRL_FILE"; then
+    sed -i "/$(echo "$TARGET_LINE" | sed 's/[^^]/[&]/g; s/\^/\\^/g')/a\\
+$OCEDITOR_LINE" "$CTRL_FILE"
+    echo "[✓] Entry oceditor berhasil disisipkan setelah entry config"
+  else
+    echo "[⚠️] Tidak ditemukan entry config utama, gagal menyisipkan oceditor"
+  fi
+  # Optional: ubah prioritas log jadi 100
+  sed -i 's/\(entry({.*"log".*Server Logs".*\), *90)/\1, 100)/' "$CTRL_FILE"
 else
-  echo "[ℹ] Menambahkan entry oceditor ke bawah config"
-  sed -i "/openclash\", \"config\".*/a\\
-  entry({\"admin\", \"services\", \"openclash\", \"oceditor\"}, template(\"openclash/oceditor\"), _(\"Config Editor\"), 90).leaf = true" "$CTRL_FILE"
+  echo "[✘] File controller tidak ditemukan: $CTRL_FILE"
 fi
 
 # === PATCH client.lua ===
 echo "[✔] Patch client.lua"
 if [ -f "$FORM_CLIENT_FILE" ]; then
+  cp "$FORM_CLIENT_FILE" "${FORM_CLIENT_FILE}.bak"
   sed -i 's/translate("OpenClash")/translate(" ")/' "$FORM_CLIENT_FILE"
   sed -i 's/translate("A Clash Client For OpenWrt")/translate(" ")/' "$FORM_CLIENT_FILE"
-  sed -i 's/^m\.description.*/-- m.description = deleted/' "$FORM_CLIENT_FILE"
   sed -i '/m:append(Template("openclash\/developer"))/d' "$FORM_CLIENT_FILE"
   echo "[✓] client.lua berhasil dipangkas"
 else
@@ -85,20 +92,20 @@ else
 fi
 
 # === BUAT SYMLINK ===
-echo "[✔] Memastikan symlink openclash -> /www/tinyfm/openclash"
+echo "[✔] Memastikan symlink openclash → /www/tinyfm/openclash"
 create_safe_openclash_symlink() {
-	local target="/etc/openclash"
-	local link="/www/tinyfm/openclash"
-	mkdir -p /www/tinyfm
-	if [ -L "$link" ] && [ "$(readlink -f "$link")" = "$target" ]; then
-		echo "[✓] Symlink sudah benar: $link → $target"
-		return 0
-	fi
-	if [ -e "$link" ]; then
-		echo "[!] Menghapus $link karena bukan symlink yang benar"
-		rm -rf "$link"
-	fi
-	ln -sf "$target" "$link" && echo "[+] Symlink dibuat: $link → $target"
+  local target="/etc/openclash"
+  local link="/www/tinyfm/openclash"
+  mkdir -p /www/tinyfm
+  if [ -L "$link" ] && [ "$(readlink -f "$link")" = "$target" ]; then
+    echo "[✓] Symlink sudah benar: $link → $target"
+    return 0
+  fi
+  if [ -e "$link" ]; then
+    echo "[!] Menghapus $link karena bukan symlink yang benar"
+    rm -rf "$link"
+  fi
+  ln -sf "$target" "$link" && echo "[+] Symlink dibuat: $link → $target"
 }
 create_safe_openclash_symlink
 
