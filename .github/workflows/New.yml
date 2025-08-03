@@ -396,6 +396,7 @@ jobs:
                   kernel=""
                   if [[ "$file" =~ k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)? ]]; then
                   kernel="${BASH_REMATCH[0]}"
+                  echo "kernel=$kernel" >> $GITHUB_ENV
             fi
              new_name="HOUJIE-WRT_${{ env.RELEASES_TAG2 }}_${replace}_${kernel}.img.gz"
             echo -e "${INFO} Renaming: $file → $new_name"
