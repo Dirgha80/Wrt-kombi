@@ -272,7 +272,7 @@ jobs:
              fi
              los=$(sudo losetup -fP --show file.img)
              sudo mount ${los}p2 rootfs
-             (cd rootfs && sudo tar cfz /imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz *)        
+             (cd rootfs && sudo tar cfz ../imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz *)        
 
      
       - name: Clear temporary files (safe)
