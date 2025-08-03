@@ -238,26 +238,39 @@ jobs:
       - name: Download file ${{ github.event.inputs.type_file }}
         if: ${{ inputs.rootfs_url != '' }}
         run: |
-           if [ $(echo ${{ github.event.inputs.rootfs_url }} | grep "drive.") ]; then
-           if [ $(echo ${{ github.event.inputs.rootfs_url }} | awk -F "/" '{print $6}') ]; then
-            link_gdrive=$(echo ${{ github.event.inputs.rootfs_url }} | awk -F "/" '{print $6}')
-           else
-            link_gdrive=$(echo ${{ github.event.inputs.rootfs_url }} | awk -F "/" '{print $4}' | awk -F "?id=" '{print $2}'|awk -F "&export" '{print $1}')
-           fi
-           sudo gdown ${link_gdrive} -O build/file.${{ github.event.inputs.type_file }}
-           else
-           if [ $(echo ${{ github.event.inputs.rootfs_url }} | grep "mediafire.com") ]; then
-            sudo mediafire-dl ${{ github.event.inputs.rootfs_url }} -o build/file.${{ github.event.inputs.type_file }}
-            else
-            if [ $(echo ${{ github.event.inputs.rootfs_url }} | grep "mega.nz") ]; then
-              file_mega=$(sudo mega-get ${{ github.event.inputs.img_url }} | awk -F: '{print $2}')
-              sudo mv ${file_mega} build/file.${{ github.event.inputs.type_file }}
-            else
-              sudo wget --no-check-certificate ${{ github.event.inputs.img_url }} -O build/file.${{ github.event.inputs.type_file }}
-            fi
-           fi
-           fi
-           echo "[✓] Download selesai:"
+         mkdir -p build
+
+          echo "[🔍] Mendeteksi sumber dari: ${{ github.event.inputs.rootfs_url }}"
+
+         if echo "${{ github.event.inputs.rootfs_url }}" | grep -q "drive."; then
+         echo "[🌐] Sumber: Google Drive"
+         if echo "${{ github.event.inputs.rootfs_url }}" | awk -F "/" '{print $6}' | grep -q .; then
+         link_gdrive=$(echo "${{ github.event.inputs.rootfs_url }}" | awk -F "/" '{print $6}')
+          else
+         link_gdrive=$(echo "${{ github.event.inputs.rootfs_url }}" | awk -F "/" '{print $4}' | awk -F "?id=" '{print $2}' | awk -F "&export" '{print $1}')
+         fi
+         echo "[⬇️] Mengunduh dari Google Drive: ID $link_gdrive"
+         sudo gdown "$link_gdrive" -O build/file.${{ github.event.inputs.type_file }}
+
+         elif echo "${{ github.event.inputs.rootfs_url }}" | grep -q "mediafire.com"; then
+         echo "[🌐] Sumber: MediaFire"
+         echo "[⬇️] Mengunduh dari MediaFire: ${{ github.event.inputs.rootfs_url }}"
+         sudo mediafire-dl "${{ github.event.inputs.rootfs_url }}" -o build/file.${{ github.event.inputs.type_file }}
+
+         elif echo "${{ github.event.inputs.rootfs_url }}" | grep -q "mega.nz"; then
+         echo "[🌐] Sumber: MEGA.nz"
+         echo "[⬇️] Mengunduh dari MEGA: ${{ github.event.inputs.rootfs_url }}"
+         file_mega=$(sudo mega-get "${{ github.event.inputs.rootfs_url }}" | awk -F: '{print $2}')
+         sudo mv "${file_mega}" "build/file.${{ github.event.inputs.type_file }}"
+
+         else
+          echo "[🌐] Sumber: URL langsung"
+          echo "[⬇️] Mengunduh dari URL: ${{ github.event.inputs.rootfs_url }}"
+          sudo wget --no-check-certificate "${{ github.event.inputs.rootfs_url }}" -O build/file.${{ github.event.inputs.type_file }}
+         fi
+
+         echo "[✅] File berhasil diunduh ke build/file.${{ github.event.inputs.type_file }}"
+
           
       - name: Extract firmware
         id: extract
