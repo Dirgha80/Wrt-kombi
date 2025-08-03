@@ -1,0 +1,190 @@
+#=====================================================================================
+# https://github.com/ophub/amlogic-s9xxx-openwrt
+# Build OpenWrt with Image Builder from URL
+#=====================================================================================
+
+name: OpenWrt Builder via URL
+
+on:
+  workflow_dispatch:
+    inputs:
+      releases_branch:
+        description: "Select the releases branch"
+        required: false
+        default: "openwrt:24.10.2"
+        type: choice
+        options:
+          - immortalwrt:24.10.1
+          - immortalwrt:23.05.4
+          - openwrt:24.10.2
+          - openwrt:23.05.5
+
+      target:
+        description: "Select device Target"
+        required: true
+        default: "Amlogic AT01"
+        type: choice
+        options:
+          - Amlogic AT01
+          - Amlogic HG680-FJ
+          - Amlogic HG680P
+          - Amlogic B860H-V5
+          - Amlogic B860H-V1-V2
+
+      rootfs_size:
+        description: "ROOTFS Size"
+        required: true
+        default: "1024"
+
+      openwrt_kernel:
+        description: "Select kernel version"
+        required: false
+        default: "6.6.y_6.12.y"
+        type: choice
+        options:
+          - 5.4.y
+          - 6.6.y
+          - 6.12.y
+          - 6.6.y_6.12.y
+
+      rootfs_url:
+        description: "Optional: Download ROOTFS archive from URL"
+        required: false
+        default: ""
+
+      type_file:
+        description: "File type"
+        required: false
+        default: "img.gz"
+        type: choice
+        options:
+          - img.gz
+          - img.xz
+
+      upload-prerelease:
+        description: "Upload as pre-release"
+        required: false
+        default: "false"
+        type: boolean
+
+env:
+  TZ: Asia/Jakarta
+  WORKING_DIR: imagebuilder
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build ${{ inputs.target }}
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Init & Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y jq gawk git curl unzip xz-utils gzip losetup kmod tar \
+            build-essential python3 python3-pip qemu-utils wget
+          sudo pip3 install gdown
+          sudo pip3 install git+https://github.com/Juvenal-Yescas/mediafire-dl
+          wget https://mega.nz/linux/repo/xUbuntu_24.04/amd64/megacmd-xUbuntu_24.04_amd64.deb
+          sudo apt install -y ./megacmd-xUbuntu_24.04_amd64.deb
+
+      - name: Setup Environment Vars
+        run: |
+          echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+          case "${{ inputs.target }}" in
+            "Amlogic AT01") echo "openwrt_board=s905x4-advan" >> $GITHUB_ENV ;;
+            "Amlogic HG680-FJ") echo "openwrt_board=s905x2-hg680-fj" >> $GITHUB_ENV ;;
+            "Amlogic HG680P") echo "openwrt_board=s905x" >> $GITHUB_ENV ;;
+            "Amlogic B860H-V5") echo "openwrt_board=s905x2-b860h-v5" >> $GITHUB_ENV ;;
+            "Amlogic B860H-V1-V2") echo "openwrt_board=s905x2" >> $GITHUB_ENV ;;
+          esac
+          RELEASES_BRANCH="${{ inputs.releases_branch }}"
+          echo "RELEASES_TAG=${RELEASES_BRANCH/:/_}" >> $GITHUB_ENV
+          echo "RELEASES_TAG2=${RELEASES_BRANCH#*:}" >> $GITHUB_ENV
+
+      - name: Download image and extract rootfs
+        if: ${{ inputs.rootfs_url != '' }}
+        run: |
+          mkdir -p build rootfs imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}
+          echo "[INFO] Downloading from ${{ inputs.rootfs_url }}"
+
+          FILE_TYPE=${{ inputs.type_file }}
+          FILE_OUT="file.${FILE_TYPE}"
+
+          if [[ "${{ inputs.rootfs_url }}" == *drive.google.com* ]]; then
+            file_id=$(echo "${{ inputs.rootfs_url }}" | grep -oE '[-\w]{25,}')
+            gdown "$file_id" -O "build/${FILE_OUT}"
+          elif [[ "${{ inputs.rootfs_url }}" == *mediafire.com* ]]; then
+            mediafire-dl "${{ inputs.rootfs_url }}" -o "build/${FILE_OUT}"
+          elif [[ "${{ inputs.rootfs_url }}" == *mega.nz* ]]; then
+            mega-get "${{ inputs.rootfs_url }}"
+            mv *.img.* "build/${FILE_OUT}"
+          else
+            wget -O "build/${FILE_OUT}" "${{ inputs.rootfs_url }}"
+          fi
+
+          cd build
+          mkdir -p rootfs img
+          if [[ "$FILE_TYPE" == "img.gz" ]]; then
+            gunzip file.img.gz
+          else
+            unxz file.img.xz
+          fi
+          los=$(sudo losetup -fP --show file.img)
+          sudo mount ${los}p2 rootfs
+          cd rootfs
+          sudo tar czf ../../imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz *
+          sudo umount .
+          sudo losetup -d $los
+
+      - name: Prepare rootfs
+        run: |
+          cd imagebuilder
+          mkdir -p compiled_images
+          if [ -f bin/targets/amlogic/${{ env.openwrt_board }}/*.tar.gz ]; then
+            mv bin/targets/amlogic/${{ env.openwrt_board }}/*.tar.gz compiled_images/
+            cp compiled_images/*.tar.gz compiled_images/rootfs.tar.gz
+          else
+            echo "[❌] Tidak ditemukan rootfs tar.gz"
+          fi
+
+      - name: Repack image with remake
+        run: |
+          cd imagebuilder
+          git clone --depth 1 https://github.com/tes-rep/amlogic-s9xxx-openwrt.git ophub_builder
+          mkdir -p ophub_builder/openwrt-armsr
+          cp -f compiled_images/*.tar.gz ophub_builder/openwrt-armsr/
+          cd ophub_builder
+          sudo ./remake -b ${{ env.openwrt_board }} -k ${{ inputs.openwrt_kernel }} -s ${{ inputs.rootfs_size }}
+          cp openwrt/out/*.img.gz ../compiled_images/
+
+      - name: Extract Kernel Version
+        run: |
+          cd imagebuilder/compiled_images
+          file=$(ls *.img.gz | head -n1)
+          if [[ "$file" =~ k([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+            kernel_version="${BASH_REMATCH[1]}"
+            echo "kernel=$kernel_version" >> $GITHUB_ENV
+          else
+            echo "kernel=unknown" >> $GITHUB_ENV
+          fi
+
+      - name: Upload to GitHub Release
+        uses: ncipollo/release-action@main
+        with:
+          tag: OpenWrt-${{ env.RELEASES_TAG2 }}-${{ inputs.target }}
+          artifacts: imagebuilder/compiled_images/*.img.gz
+          allowUpdates: true
+          replacesArtifacts: true
+          prerelease: ${{ inputs.upload-prerelease }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body: |
+            ### OpenWrt Image
+            - Device : ${{ inputs.target }}
+            - Kernel Version (Set) : ${{ inputs.openwrt_kernel }}
+            - Kernel Version (Parsed) : ${{ env.kernel }}
+            - ROOTFS Source : ${{ inputs.rootfs_url }}
+            - Size : ${{ inputs.rootfs_size }}
+            - Built with tag : ${{ env.RELEASES_TAG }}
