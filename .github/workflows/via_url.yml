@@ -249,7 +249,7 @@ jobs:
            sudo gdown ${link_gdrive} -O build/file.${{ github.event.inputs.type_file }}
            else
            if [ $(echo ${{ github.event.inputs.rootfs_url }} | grep "mediafire.com") ]; then
-            sudo mediafire-dl ${{ github.event.inputs.img_url }} -o build/file.${{ github.event.inputs.type_file }}
+            sudo mediafire-dl ${{ github.event.inputs.rootfs_url }} -o build/file.${{ github.event.inputs.type_file }}
             else
             if [ $(echo ${{ github.event.inputs.rootfs_url }} | grep "mega.nz") ]; then
               file_mega=$(sudo mega-get ${{ github.event.inputs.img_url }} | awk -F: '{print $2}')
