@@ -258,7 +258,7 @@ jobs:
            fi
            fi
            echo "[✓] Download selesai:"
-           ls -lh imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}
+          
       - name: Extract firmware
         id: extract
         if: ${{ inputs.rootfs_url != '' }}
