@@ -158,6 +158,9 @@ jobs:
           #sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
           # sudo -E systemctl daemon-reload
           sudo timedatectl set-timezone "$TZ"
+          sudo pip3 install gdown
+          sudo pip3 install git+https://github.com/Juvenal-Yescas/mediafire-dl
+          wget https://mega.nz/linux/repo/xUbuntu_24.04/amd64/megacmd-xUbuntu_24.04_amd64.deb && sudo apt install "$PWD/megacmd-xUbuntu_24.04_amd64.deb"
           echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
           echo -e "[\033[94m INFO \033[0m] TARGET: ${{ matrix.target }}"
           echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
@@ -235,6 +238,7 @@ jobs:
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
 
       - name: Download file ${{ github.event.inputs.type_file }}
+        if: ${{ inputs.rootfs_url != '' }}
         run: |
            if [ $(echo ${{ github.event.inputs.rootfs_url }} | grep "drive.") ]; then
            if [ $(echo ${{ github.event.inputs.rootfs_url }} | awk -F "/" '{print $6}') ]; then
@@ -257,6 +261,7 @@ jobs:
            fi
       - name: Extract firmware
         id: extract
+        if: ${{ inputs.rootfs_url != '' }}
         run: |  
              cd build
              sudo mkdir -p boot rootfs img
