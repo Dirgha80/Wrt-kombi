@@ -263,6 +263,7 @@ jobs:
         id: extract
         if: ${{ inputs.rootfs_url != '' }}
         run: |  
+             mkdir -p imagebuilder/compiled_images/mod
              cd build
              sudo mkdir -p boot rootfs img
              if [ ${{ github.event.inputs.type_file }} = "img.gz" ]; then
@@ -272,7 +273,7 @@ jobs:
              fi
              los=$(sudo losetup -fP --show file.img)
              sudo mount ${los}p2 rootfs
-             (cd rootfs && sudo tar cfz ../imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz *)        
+             (cd rootfs && sudo tar cfz ../imagebuilder/compiled_images/external-rootfs.tar.gz *)        
 
      
       - name: Clear temporary files (safe)
