@@ -6,7 +6,7 @@
 #                https://downloads.immortalwrt.org/releases
 #=====================================================================================
 
-name: Build via URL22
+name: Build via URLnew
 
 on:
   repository_dispatch:
