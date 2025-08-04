@@ -73,6 +73,9 @@ COUNTRY="ID"
 
 echo "[WiFi-Setup] Deteksi dan konfigurasi WiFi..."
 
+# Flag untuk memeriksa apakah konfigurasi Wi-Fi dilakukan
+CONFIGURED=0
+
 # 2.4GHz - radio0
 if [ -e /sys/class/ieee80211/phy0 ]; then
   msg "[WiFi] Mengatur radio0 (2.4GHz)"
@@ -87,6 +90,8 @@ if [ -e /sys/class/ieee80211/phy0 ]; then
   uci set wireless.@wifi-iface[0].encryption='psk2'
   uci set wireless.@wifi-iface[0].key="$PASS_WIFI"
   uci set wireless.@wifi-iface[0].disabled='0'
+
+  CONFIGURED=1
 fi
 
 # 5GHz - radio1
@@ -104,9 +109,16 @@ if [ -e /sys/class/ieee80211/phy1 ]; then
   uci set wireless.@wifi-iface[-1].encryption='psk2'
   uci set wireless.@wifi-iface[-1].key="$PASS_WIFI"
   uci set wireless.@wifi-iface[-1].disabled='0'
+
+  CONFIGURED=1
 fi
 
-uci commit wireless
+# Jika kedua radio tidak ada, lewati commit
+if [ "$CONFIGURED" -eq 1 ]; then
+  uci commit wireless
+else
+  msg "[WiFi] Tidak ada radio Wi-Fi yang tersedia, skip commit."
+fi
 
 # Step 1: Configure Password Login OpenWrt
 msg "Step 1: Configure Password Login OpenWrt"
