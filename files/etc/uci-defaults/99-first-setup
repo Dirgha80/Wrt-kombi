@@ -220,7 +220,8 @@ chmod +x /usr/bin/jam.sh
 
 # Step 17: Run
 msg "Step 14: ip info"
-mv /www/luci-static/resources/view/status/include/01_ipinfo.js /www/luci-static/resources/view/status/include/11_ipinfo.js
+rm -rf /www/luci-static/resources/view/status/include/01_ipinfo.js
+# mv /www/luci-static/resources/view/status/include/01_ipinfo.js.o /www/luci-static/resources/view/status/include/11_ipinfo.js
 
 # Step 14:Default Theme #
 msg "Step 15: Set bahasa"
