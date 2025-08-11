@@ -646,7 +646,7 @@ else
     echo -e "${SUCCESS} The rebuild is successful, the current path: [ ${PWD} ]"
 fi
 
-
+}
 # Show welcome message
 echo -e "${STEPS} Welcome to Rebuild OpenWrt Using the Image Builder."
 [[ -x "${0}" ]] || error_msg "Please give the script permission to run: [ chmod +x ${0} ]"
