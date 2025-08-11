@@ -587,6 +587,20 @@ if echo "$OPENWRT_KERNEL" | grep -q "5.4"; then
     echo "[INFO] Detected kernel 5.4, excluding procd-ujail"
     EXCLUDED+=" -procd-ujail"
 fi
+
+
+# Tambahan berdasarkan source
+if [ "${op_sourse}" == "openwrt" ]; then
+    EXCLUDED+=" -dnsmasq"
+elif [ "${op_sourse}" == "immortalwrt" ]; then
+    EXCLUDED+=" -dnsmasq -automount -libustream-openssl -default-settings-chn -luci-i18n-base-zh-cn"
+
+    # Tambahan untuk x86_64
+    if [ "$ARCH_2" == "x86_64" ]; then
+        EXCLUDED+=" -kmod-usb-net-rtl8152-vendor"
+    fi
+fi
+
 # Tambahan paket Tunnel
 OPENCLASH+="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
 NIKKI+="nikki luci-app-nikki"
@@ -618,20 +632,6 @@ handle_tunnel_option() {
             ;;
     esac
 }
-
-# Tambahan berdasarkan source
-if [ "${op_sourse}" == "openwrt" ]; then
-    EXCLUDED+=" -dnsmasq"
-elif [ "${op_sourse}" == "immortalwrt" ]; then
-    EXCLUDED+=" -dnsmasq -automount -libustream-openssl -default-settings-chn -luci-i18n-base-zh-cn"
-
-    # Tambahan untuk x86_64
-    if [ "$ARCH_2" == "x86_64" ]; then
-        EXCLUDED+=" -kmod-usb-net-rtl8152-vendor"
-    fi
-fi
-
-
     # Rebuild firmware
 make clean
 
