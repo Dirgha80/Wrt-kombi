@@ -661,6 +661,7 @@ echo -e "${STEPS} Welcome to Rebuild OpenWrt Using the Image Builder."
 op_sourse="${1%:*}"
 op_branch="${1#*:}"
 op_target="${2}"
+TUNNEL_OPTION="${3}"   # Argumen ketiga untuk opsi tunnel
 echo -e "${INFO} Rebuild path: [ ${PWD} ]"
 echo -e "${INFO} Rebuild Source: [ ${op_sourse} ], Branch: [ ${op_branch} ], Target: ${op_target}"
 echo -e "${INFO} Server space usage before starting to compile: \n$(df -hT ${make_path}) \n"
