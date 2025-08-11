@@ -82,7 +82,7 @@ on:
       fwinfo:
         description: 'Firmware Information'
         required: false
-        default: "imagebuilderA.sh"
+        default: "imagebuilderC.sh"
         type: choice
         options:
           - imagebuilder.sh
