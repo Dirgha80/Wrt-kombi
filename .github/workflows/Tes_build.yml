@@ -171,6 +171,7 @@ jobs:
           echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
           echo -e "[\033[94m INFO \033[0m] TARGET: ${{ matrix.target }}"
           echo "BUILD_DATE=$(date +'%d-%m-%y %H:%M:%S')" >> $GITHUB_ENV
+          echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
 
       - name: Setup Environment Variables
         id: init
