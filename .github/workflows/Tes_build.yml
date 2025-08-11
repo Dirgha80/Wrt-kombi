@@ -238,7 +238,7 @@ jobs:
           RELEASES_TAG2="${RELEASES_BRANCH#*:}"
           export OPENWRT_KERNEL="${{ inputs.openwrt_kernel }}"
           chmod +x ${IMAGEBUILDER_SH}
-          bash ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} "${{ env.TARGET_NAME }}"
+          bash ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} "${{ env.TARGET_NAME }}" "${{ inputs.tunnel_option }}"
           echo "RELEASES_TAG=$RELEASES_TAG" >> ${GITHUB_ENV}
           echo "RELEASES_TAG2=$RELEASES_TAG2" >> ${GITHUB_ENV}
           echo "status=success" >> ${GITHUB_OUTPUT}
