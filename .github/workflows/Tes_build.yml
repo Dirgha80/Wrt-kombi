@@ -170,7 +170,7 @@ jobs:
           wget https://mega.nz/linux/repo/xUbuntu_24.04/amd64/megacmd-xUbuntu_24.04_amd64.deb && sudo apt install "$PWD/megacmd-xUbuntu_24.04_amd64.deb"
           echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
           echo -e "[\033[94m INFO \033[0m] TARGET: ${{ matrix.target }}"
-          echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date +'%d-%m-%y %H:%M:%S')" >> $GITHUB_ENV
 
       - name: Setup Environment Variables
         id: init
@@ -223,10 +223,6 @@ jobs:
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
 
-      - name: Mengatur tanggal
-        id: date
-        run: echo "date=$(date +'%d-%m-%y %H:%M:%S')" >> $GITHUB_OUTPUT
-        
       - name: Build Rootfs [ ${{ inputs.releases_branch }} ]
         id: imagebuilder
         if: ${{ steps.init.outputs.status == 'success' && inputs.rootfs_url == '' && !cancelled() }}
@@ -452,7 +448,7 @@ jobs:
             - Default WIFI name: NOKIA N73 | NOKIA N73_5G
             - Default WIFI password: sijitekowolu
             ###   Firmware Details : 
-              - Tanggal Build: ${{ steps.date.outputs.date }}
+              - Tanggal Build: ${{ env.BUILD_DATE }}
               - Devices type : ${{ inputs.target }}
               - Kernel version : ${{ inputs.openwrt_kernel }}
               - Kernel Version (Parsed) : ${{ env.kernel }}
