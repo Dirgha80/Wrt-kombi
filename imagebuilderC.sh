@@ -515,7 +515,37 @@ custom_files() {
         echo -e "${WARNING} No customized files were added."
     fi
 }
+# Tambahan paket Tunnel
+OPENCLASH+="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
+NIKKI+="nikki luci-app-nikki"
+PASSWALL+="chinadns-ng dns2socks dns2tcp geoview hysteria ipt2socks microsocks naiveproxy simple-obfs sing-box tcping trojan-plus tuic-client v2ray-core v2ray-plugin xray-core xray-plugin v2ray-geoip v2ray-geosite luci-app-passwall"
 
+# Fungsi memilih paket tunnel
+handle_tunnel_option() {
+    case "$1" in
+        "openclash")
+            PACKAGES+=" $OPENCLASH"
+            ;;
+        "passwall")
+            PACKAGES+=" $PASSWALL"
+            ;;
+        "nikki")
+            PACKAGES+=" $NIKKI"
+            ;;
+        "openclash-passwall")
+            PACKAGES+=" $OPENCLASH $PASSWALL"
+            ;;
+        "nikki-passwall")
+            PACKAGES+=" $NIKKI $PASSWALL"
+            ;;
+        "nikki-openclash")
+            PACKAGES+=" $NIKKI $OPENCLASH"
+            ;;
+        "all-tunnel")
+            PACKAGES+=" $OPENCLASH $PASSWALL $NIKKI"
+            ;;
+    esac
+}
 # Rebuild OpenWrt firmware
 rebuild_firmware() {
     cd ${imagebuilder_path}
@@ -601,37 +631,6 @@ elif [ "${op_sourse}" == "immortalwrt" ]; then
     fi
 fi
 
-# Tambahan paket Tunnel
-OPENCLASH+="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
-NIKKI+="nikki luci-app-nikki"
-PASSWALL+="chinadns-ng dns2socks dns2tcp geoview hysteria ipt2socks microsocks naiveproxy simple-obfs sing-box tcping trojan-plus tuic-client v2ray-core v2ray-plugin xray-core xray-plugin v2ray-geoip v2ray-geosite luci-app-passwall"
-
-# Fungsi memilih paket tunnel
-handle_tunnel_option() {
-    case "$1" in
-        "openclash")
-            PACKAGES+=" $OPENCLASH"
-            ;;
-        "passwall")
-            PACKAGES+=" $PASSWALL"
-            ;;
-        "nikki")
-            PACKAGES+=" $NIKKI"
-            ;;
-        "openclash-passwall")
-            PACKAGES+=" $OPENCLASH $PASSWALL"
-            ;;
-        "nikki-passwall")
-            PACKAGES+=" $NIKKI $PASSWALL"
-            ;;
-        "nikki-openclash")
-            PACKAGES+=" $NIKKI $OPENCLASH"
-            ;;
-        "all-tunnel")
-            PACKAGES+=" $OPENCLASH $PASSWALL $NIKKI"
-            ;;
-    esac
-}
     # Rebuild firmware
 make clean
 
