@@ -63,15 +63,7 @@ on:
           - 6.1.y_6.6.y
           - 5.15.y_5.10.y
           - 6.6.y_6.12.y
-      kernel_repo:
-        description: "Set the kernel repository"
-        required: false
-        default: "Houjie80/kernel2"
-        type: choice
-        options:
-          - ophub/kernel
-          - Houjie80/kernel2
-          - tes-rep/kernel
+     
       kernel_usage:
         description: "Set the tags of the stable kernel."
         required: false
@@ -116,14 +108,14 @@ on:
         default: ""
         type: choice
         options:
-           - ""
-           - openclash
-           - passwall
-           - nikki
-           - openclash-passwall
-           - nikki-passwall
-           - nikki-openclash
-           - all-tunnel
+          - ""
+          - openclash
+          - passwall
+          - nikki
+          - openclash-passwall
+          - nikki-passwall
+          - nikki-openclash
+          - all-tunnel
     
 env:
   TZ: Asia/Jakarta
