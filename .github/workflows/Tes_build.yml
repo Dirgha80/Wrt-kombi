@@ -236,7 +236,6 @@ jobs:
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
           RELEASES_TAG="${RELEASES_BRANCH/:/_}"
           RELEASES_TAG2="${RELEASES_BRANCH#*:}"
-          TUNNEL_OPTION: ${{ inputs.tunnel_option }}
           export OPENWRT_KERNEL="${{ inputs.openwrt_kernel }}"
           chmod +x ${IMAGEBUILDER_SH}
           bash ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} "${{ env.TARGET_NAME }}" "${{ inputs.tunnel_option }}"
