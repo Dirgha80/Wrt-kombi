@@ -182,7 +182,7 @@ ln -s /usr/bin/php-cli /usr/bin/php
 [ -d /usr/lib/php8 ] && [ ! -d /usr/lib/php ] && ln -sf /usr/lib/php8 /usr/lib/php
 msg "patching system with php configuration done ..."
 msg "restarting uhttpd ..."
-/etc/init.d/uhttpd restart
+/etc/init.d/uhttpd reload
 
 
 # Step 13: Setting Tinyfm
