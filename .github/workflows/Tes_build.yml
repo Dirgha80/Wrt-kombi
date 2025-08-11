@@ -437,7 +437,7 @@ jobs:
         uses: ncipollo/release-action@main
         if: ${{ steps.modsdcard.outputs.status }} == 'success' && !cancelled()
         with:
-          tag: HOUJIE-Wrt_${{ env.RELEASES_TAG2 }}-${{ github.ref_name }}
+          tag: HOUJIE-Wrt_${{ env.RELEASES_TAG2 }}-${{ env.openwrt_board }}
           artifacts: imagebuilder/compiled_images/mod/*
           allowUpdates: true
           removeArtifacts: false
@@ -458,3 +458,4 @@ jobs:
               - Kernel Version (Parsed) : ${{ env.kernel }}
               - ROOTFS File : ${{ inputs.releases_branch }}
               - ROOTFS Size : ${{ inputs.rootfs_size }}
+              - tunnel : ${{ inputs.tunnel_option }}
