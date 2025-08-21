@@ -248,9 +248,13 @@ fi
 msg "Step 22: Run ocmod"
 chmod +x /root/ocmod.sh && /root/ocmod.sh
 
+# Step 22: Run ocmod
+msg "Step 23: Run ocmod"
+chmod +x /root/temp.sh && /root/temp.sh
+
 # Step 23: Remove temp files
-msg "Step 23: Remove temp files"
-rm -rf /root/ocmod.sh /root/addport.sh
+msg "Step 24: Remove temp files"
+rm -rf /root/ocmod.sh /root/addport.sh /root/temp.sh
 
 msg "First Setup settings successfully applied..."
 
