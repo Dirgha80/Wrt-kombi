@@ -1,17 +1,42 @@
 #!/bin/sh
+set -e
 
-TARGET="/usr/share/ucode/luci/template/admin_status/index.ut"
-BACKUP="$TARGET.bak.$(date +%Y%m%d%H%M%S)"
-TMPFILE="$(mktemp)"
+# === Konfigurasi file ===
+INDEX_UT="/usr/share/ucode/luci/template/admin_status/index.ut"
+SYSTEM_JS="/www/luci-static/resources/view/status/include/10_system.js"
 LOG_FILE="/root/houjie-wrt.log"
+DATESTAMP=$(date +%Y%m%d%H%M%S)
 
-# Fungsi log
 log_message() {
-    echo "$(date +'%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
+    LEVEL=$1
+    MSG=$2
+    echo "$(date +'%Y-%m-%d %H:%M:%S') [$LEVEL] - $MSG" >> "$LOG_FILE"
 }
 
-# Patch yang mau disisipkan
-PATCH=$(cat <<'EOF'
+backup_file() {
+    FILE=$1
+    BACKUP="${FILE}.bak.${DATESTAMP}"
+    if cp "$FILE" "$BACKUP"; then
+        log_message "INFO" "Backup $FILE → $BACKUP"
+        echo "$BACKUP"
+    else
+        log_message "ERROR" "Gagal backup $FILE"
+        return 1
+    fi
+}
+
+# === Patch index.ut ===
+if [ ! -f "$INDEX_UT" ]; then
+    log_message "ERROR" "File $INDEX_UT tidak ditemukan!"
+    echo "[✘] File $INDEX_UT tidak ditemukan!"
+else
+    if grep -q 'id="cpuusage"' "$INDEX_UT"; then
+        echo "[!] Patch index.ut sudah ada, dilewati."
+        log_message "WARN" "Patch index.ut sudah ada, dilewati."
+    else
+        INDEX_BACKUP=$(backup_file "$INDEX_UT")
+        TMP_INDEX=$(mktemp)
+        PATCH_INDEX=$(cat <<'EOF'
 <div id="cpuusage">Loading CPU usage...</div>
 <div id="tempcpu">Loading CPU temp...</div>
 
@@ -46,36 +71,63 @@ PATCH=$(cat <<'EOF'
 //]]></script>
 EOF
 )
-
-# Cek apakah sudah pernah dipatch
-if grep -q "id=\"cpuusage\"" "$TARGET"; then
-    echo "[!] Patch sudah ada, tidak melakukan perubahan."
-    log_message "Patch duplikat dicegah, tidak diubah: $TARGET"
-    exit 0
+        awk -v patch="$PATCH_INDEX" '
+        {
+            if ($0 ~ /\{\% *include\(.*footer.*\) *\%\}/) { print patch }
+            print
+        }' "$INDEX_UT" > "$TMP_INDEX" && mv "$TMP_INDEX" "$INDEX_UT"
+        echo "[+] Patch index.ut selesai."
+        log_message "INFO" "Patch index.ut berhasil disisipkan CPU Usage & Temperature."
+    fi
 fi
 
-# Backup dulu
-if cp "$TARGET" "$BACKUP"; then
-    echo "Backup dibuat: $BACKUP"
-    log_message "Backup index.ut → $BACKUP"
+# === Patch 10_system.js ===
+if [ ! -f "$SYSTEM_JS" ]; then
+    log_message "ERROR" "File $SYSTEM_JS tidak ditemukan!"
+    echo "[✘] File $SYSTEM_JS tidak ditemukan!"
 else
-    echo "[✘] Gagal membuat backup!"
-    log_message "Gagal membuat backup $TARGET"
-    exit 1
+    if grep -q 'tempcpu' "$SYSTEM_JS"; then
+        echo "[!] Patch 10_system.js sudah ada, dilewati."
+        log_message "WARN" "Patch 10_system.js sudah ada, dilewati."
+    else
+        SYSTEM_BACKUP=$(backup_file "$SYSTEM_JS")
+        TMP_JS=$(mktemp)
+        awk '
+        BEGIN { temp_patched=0; fw_patched=0 }
+        /var fields *= *\[/ {
+            print
+            while(getline){
+                if ($0 ~ /Firmware Version/) { next }
+                if (fw_patched==0 && $0 ~ /Target Platform/) {
+                    print "    _(\"\Firmware Version\"), (L.isObject(boardinfo.release) ? boardinfo.release.description + \" / \" : \"\") + \"HOUJIE-WRT\","
+                    fw_patched=1
+                }
+                if ($0 ~ /\];/ && temp_patched==0) {
+                    print "    _(\"\Temperature\"), tempcpu,"
+                    print "    _(\"\CPU Usage\"), cpuusage"
+                    temp_patched=1
+                }
+                print
+                if (fw_patched==1 && temp_patched==1 && $0 ~ /\];/) break
+            }
+            while(getline){ print }
+            exit
+        }
+        { print }' "$SYSTEM_JS" > "$TMP_JS" && mv "$TMP_JS" "$SYSTEM_JS"
+        echo "[+] Patch 10_system.js selesai."
+        log_message "INFO" "Patch 10_system.js berhasil diterapkan."
+    fi
 fi
 
-# Sisipkan patch sebelum {% include('footer') %}
-if awk -v patch="$PATCH" '
-{
-    if ($0 ~ /\{\% *include\(.*footer.*\) *\%\}/) {
-        print patch;
-    }
-    print;
-}' "$TARGET" > "$TMPFILE" && mv "$TMPFILE" "$TARGET"; then
-    echo "[+] Patch selesai. Silakan reload LuCI."
-    log_message "Patch CPU Usage & Temp berhasil disisipkan ke index.ut"
+# === Set permission & reload LuCI ===
+chmod 644 "$SYSTEM_JS" "$INDEX_UT"
+log_message "INFO" "Permission 644 diterapkan ke file patch."
+
+if /etc/init.d/uhttpd restart; then
+    log_message "INFO" "uHTTPd direstart untuk reload LuCI."
 else
-    echo "[✘] Patch gagal!"
-    log_message "Patch gagal untuk $TARGET"
-    exit 1
+    log_message "ERROR" "Gagal restart uHTTPd!"
 fi
+
+echo "[✅] Semua patch selesai. Silakan reload browser LuCI."
+log_message "INFO" "Semua patch berhasil diterapkan dan LuCI di-reload."
