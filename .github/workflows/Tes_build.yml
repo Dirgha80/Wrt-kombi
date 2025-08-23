@@ -154,6 +154,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Notif saat mulai build
+      - name: Notify Start Build
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          MESSAGE="🚀 Build dimulai...
+          📦 Target   : ${{ inputs.target }}
+          🌐 Release  : ${{ inputs.releases_branch }}
+          🖥 Kernel   : ${{ inputs.openwrt_kernel }}
+          ⏰ Tanggal  : ${{ env.BUILD_DATE }}"
+          
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d parse_mode="Markdown" \
+          -d text="$MESSAGE"  
+
       - name: Initialization environment (normal)
         # if: github.event.inputs.target != 'all' && !cancelled()
         env:
@@ -456,3 +471,18 @@ jobs:
               - ROOTFS File : ${{ inputs.releases_branch }}
               - ROOTFS Size : ${{ inputs.rootfs_size }}
               - tunnel : ${{ inputs.tunnel_option }}
+
+      - name: Send Telegram Notification
+        if: ${{ steps.modsdcard.outputs.status == 'success' && !cancelled() }}
+        run: |
+          MESSAGE="✅ Build Selesai!
+          📦 Target     : ${{ inputs.target }}
+          🌐 Release    : ${{ inputs.releases_branch }}
+          🖥 Kernel     : ${{ inputs.openwrt_kernel }}
+          📅 Tanggal    : ${{ env.BUILD_DATE }}
+          🔗 Download   : https://github.com/${{ github.repository }}/releases/tag/HOUJIE-Wrt_${{ env.openwrt_board }}"
+          
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d parse_mode="Markdown" \
+          -d text="$MESSAGE"  
