@@ -157,10 +157,10 @@ jobs:
       # Notif saat mulai build
       - name: Notify Start Build
         run: |
-          MESSAGE="🚀 Build dimulai...<br>
-          📦 Target   : <b>${{ inputs.target }}</b><br>
-          🌐 Release  : <b>${{ inputs.releases_branch }}</b><br>
-          🖥 Kernel   : <b>${{ inputs.openwrt_kernel }}</b><br>
+          MESSAGE="🚀 Build dimulai...\n
+          📦 Target   : <b>${{ inputs.target }}</b>\n
+          🌐 Release  : <b>${{ inputs.releases_branch }}</b>\n
+          🖥 Kernel   : <b>${{ inputs.openwrt_kernel }}</b>\n
           ⏰ Tanggal  : <b>${{ env.BUILD_DATE }}</b>"
           
           curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
