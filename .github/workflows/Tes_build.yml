@@ -156,18 +156,17 @@ jobs:
 
       # Notif saat mulai build
       - name: Notify Start Build
-        if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
-          MESSAGE="🚀 Build dimulai...
-          📦 Target   : ${{ inputs.target }}
-          🌐 Release  : ${{ inputs.releases_branch }}
-          🖥 Kernel   : ${{ inputs.openwrt_kernel }}
-          ⏰ Tanggal  : ${{ env.BUILD_DATE }}"
+          MESSAGE="🚀 Build dimulai...<br>
+          📦 Target   : <b>${{ inputs.target }}</b><br>
+          🌐 Release  : <b>${{ inputs.releases_branch }}</b><br>
+          🖥 Kernel   : <b>${{ inputs.openwrt_kernel }}</b><br>
+          ⏰ Tanggal  : <b>${{ env.BUILD_DATE }}</b>"
           
           curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
           -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
-          -d parse_mode="Markdown" \
-          -d text="$MESSAGE"  
+          -d parse_mode="HTML" \
+          -d text="$MESSAGE"
 
       - name: Initialization environment (normal)
         # if: github.event.inputs.target != 'all' && !cancelled()
