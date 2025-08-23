@@ -122,7 +122,7 @@ env:
   IMAGEBUILDER_SH: ${{ inputs.fwinfo }}
   TUNNEL_OPTION: ${{ inputs.tunnel_option }}
   WORKING_DIR: imagebuilder
-  DOWNLOAD_URL: "https://github.com/tes-rep/kernel/releases"  # Ganti dengan URL release repo kamu
+  DOWNLOAD_URL: "https://tes-rep.github.io/Server-repo/"  # Ganti dengan URL release repo kamu
 jobs:
   prebuild:
     runs-on: ubuntu-latest
