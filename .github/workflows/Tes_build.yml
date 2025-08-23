@@ -122,7 +122,7 @@ env:
   IMAGEBUILDER_SH: ${{ inputs.fwinfo }}
   TUNNEL_OPTION: ${{ inputs.tunnel_option }}
   WORKING_DIR: imagebuilder
-
+  DOWNLOAD_URL: "https://github.com/tes-rep/kernel/releases"  # Ganti dengan URL release repo kamu
 jobs:
   prebuild:
     runs-on: ubuntu-latest
@@ -157,16 +157,18 @@ jobs:
       # Notif saat mulai build
       - name: Notify Start Build
         run: |
-          MESSAGE="🚀 Build dimulai...\n
-          📦 Target   : <b>${{ inputs.target }}</b>\n
-          🌐 Release  : <b>${{ inputs.releases_branch }}</b>\n
-          🖥 Kernel   : <b>${{ inputs.openwrt_kernel }}</b>\n
-          ⏰ Tanggal  : <b>${{ env.BUILD_DATE }}</b>"
-          
+          DATE=$(date +"%Y-%m-%d %H:%M:%S")
+          MESSAGE="🚀 Build dimulai...
+          ═══════════════════════
+          📦 Target   : <b>${{ inputs.target }}</b>
+          🌐 Release  : <b>${{ inputs.releases_branch }}</b>
+          🖥 Kernel   : <b>${{ inputs.openwrt_kernel }}</b>
+          ⏰ Tanggal  : <b>$DATE</b>"
+
           curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
           -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
           -d parse_mode="HTML" \
-          -d text="$MESSAGE"
+          --data-urlencode text="$MESSAGE"
 
       - name: Initialization environment (normal)
         # if: github.event.inputs.target != 'all' && !cancelled()
