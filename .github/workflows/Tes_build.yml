@@ -495,3 +495,21 @@ jobs:
           -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
           -d parse_mode="HTML" \
           --data-urlencode text="$MESSAGE"
+
+      - name: Notify Failure Build
+        if: failure()
+        run: |
+          DATE=$(date +"%Y-%m-%d %H:%M:%S")
+          MESSAGE="❌ Build firmware gagal!
+          ═══════════════════════
+          📦 Target   : <b>${{ inputs.target }}</b>
+          🌐 Release  : <b>${{ inputs.releases_branch }}</b>
+          🖥 Kernel   : <b>${{ inputs.openwrt_kernel }}</b>
+          ⏰ Tanggal  : <b>$DATE</b>
+          🔗 Unduh    : <a href=\"${DOWNLOAD_URL}\">Klik di sini</a>"
+
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d parse_mode="HTML" \
+          --data-urlencode text="$MESSAGE"
+   
