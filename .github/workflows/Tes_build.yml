@@ -488,7 +488,7 @@ jobs:
           📦 Target   : <b>${{ inputs.target }}</b>
           🌐 Release  : <b>${{ inputs.releases_branch }}</b>
           🖥 Kernel   : <b>${{ inputs.openwrt_kernel }}</b>
-          ⏰ Tanggal  : <b>$DATE</b>"
+          ⏰ Tanggal  : <b>$DATE</b>
           🔗 Unduh    : <a href=\"${DOWNLOAD_URL}\">Klik di sini</a>"
 
           curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
