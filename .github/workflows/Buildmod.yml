@@ -496,9 +496,10 @@ jobs:
           DATE=$(date +"%Y-%m-%d %H:%M:%S")
           MESSAGE="✅ Build firmware selesai!
           ═══════════════════════
+          🇲🇨 dev      : <b>houjie80</b>
           📦 Target   : <b>${{ inputs.target }}</b>
           🌐 Release  : <b>${{ inputs.releases_branch }}</b>
-          🖥 Kernel   : <b>${{ inputs.openwrt_kernel }}</b>
+          🖥 Kernel   : <b>$${{ env.kernel }}</b>
           ⏰ Tanggal  : <b>$DATE</b>
           🔗 Unduh    : <a href=\"${DOWNLOAD_URL}\">Klik di sini</a>"
 
@@ -513,9 +514,10 @@ jobs:
           DATE=$(date +"%Y-%m-%d %H:%M:%S")
           MESSAGE="❌ Build firmware gagal!
           ═══════════════════════
+          🇲🇨 dev      : <b>houjie80</b>
           📦 Target   : <b>${{ inputs.target }}</b>
           🌐 Release  : <b>${{ inputs.releases_branch }}</b>
-          🖥 Kernel   : <b>${{ inputs.openwrt_kernel }}</b>
+          🖥 Kernel   : <b>$${{ env.kernel }}</b>
           ⏰ Tanggal  : <b>$DATE</b>
           🔗 Unduh    : <a href=\"${DOWNLOAD_URL}\">Klik di sini</a>"
 
