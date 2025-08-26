@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-BOARD="s905x4-advan"
-ROOTFS_IMG="build/rootfs.img.gz"
+BOARD="$openwrt_board"
+ROOTFS_IMG="build/file.img.gz"
 TARGET_DIR="imagebuilder/bin/targets/amlogic/${BOARD}"
 ROOTFS_TAR="${TARGET_DIR}/openwrt-${BOARD}-external-rootfs.tar.gz"
 
