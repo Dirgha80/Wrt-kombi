@@ -76,13 +76,18 @@ msg "Device Board: $(ubus call system board | grep '\"board_name\"' | sed 's/ \+
 sed -i -E "s|icons/port_%s.png|icons/port_%s.gif|g" /www/luci-static/resources/view/status/include/29_ports.js
 
 if grep -q "ImmortalWrt" /etc/openwrt_release; then
-  sed -i "s/\(DISTRIB_DESCRIPTION='ImmortalWrt [0-9]*\.[0-9]*\.[0-9]*\).*'/\1'/g" /etc/openwrt_release
+  sed -i -E "s/(DISTRIB_DESCRIPTION='ImmortalWrt [0-9]+\.[0-9]+\.[0-9]+).*/\1'/" /etc/openwrt_release
+  sed -i -E "s/(PRETTY_NAME=\"ImmortalWrt [0-9]+\.[0-9]+\.[0-9]+).*/\1\"/" /usr/lib/os-release
   sed -i -E "s|services/ttyd|system/ttyd|g" /usr/share/ucode/luci/template/themes/material/header.ut
   msg "Branch version: $(grep 'DISTRIB_DESCRIPTION=' /etc/openwrt_release | awk -F\"'\" '{print $2}')"
+
 elif grep -q "OpenWrt" /etc/openwrt_release; then
-  sed -i "s/\(DISTRIB_DESCRIPTION='OpenWrt [0-9]*\.[0-9]*\.[0-9]*\).*'/\1'/g" /etc/openwrt_release
+  sed -i -E "s/(DISTRIB_DESCRIPTION='OpenWrt [0-9]+\.[0-9]+\.[0-9]+).*/\1'/" /etc/openwrt_release
+  sed -i -E "s/(DISTRIB_DESCRIPTION='OpenWrt [0-9]+\.[0-9]+\.[0-9]+).*/\1'/" /usr/lib/os-release
+  sed -i -E "s/(PRETTY_NAME=\"OpenWrt [0-9]+\.[0-9]+\.[0-9]+).*/\1\"/" /usr/lib/os-release
   msg "Branch version: $(grep 'DISTRIB_DESCRIPTION=' /etc/openwrt_release | awk -F\"'\" '{print $2}')"
 fi
+
 msg "###############################################"
 
 # Set hostname and Timezone to Asia/Jakarta
