@@ -66,6 +66,23 @@ setup_wireless() {
 
     msg "Wireless configuration applied."
 }
+fix_branch_version() {
+    local release_file="/etc/openwrt_release"
+    local os_release="/usr/lib/os-release"
+
+    if grep -q "ImmortalWrt" "$release_file"; then
+        sed -i -E 's/\(DISTRIB_DESCRIPTION=.ImmortalWrt [0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1'/' $release_file
+        sed -i -E 's/\(PRETTY_NAME=.ImmortalWrt [0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1"/' $os_release
+        sed -i -E 's|services/ttyd|system/ttyd|g' /usr/share/ucode/luci/template/themes/material/header.ut
+        msg "Branch version: $(grep "DISTRIB_DESCRIPTION=" $release_file | awk -F\"'\" '{print $2}')"
+
+    elif grep -q "OpenWrt" "$release_file"; then
+        sed -i -E 's/\(DISTRIB_DESCRIPTION=.OpenWrt [0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1'/' $release_file
+        sed -i -E 's/\(DISTRIB_DESCRIPTION=.OpenWrt [0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1'/' $os_release
+        sed -i -E 's/\(PRETTY_NAME=.OpenWrt [0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1"/' $os_release
+        msg "Branch version: $(grep "DISTRIB_DESCRIPTION=" $release_file | awk -F\"'\" '{print $2}')"
+    fi
+}
 
 # dont remove!
 msg "Installed Time: $(date '+%A, %d %B %Y %T')"
@@ -74,16 +91,8 @@ msg "Processor: $(ubus call system board | grep '\"system\"' | sed 's/ \+/ /g' |
 msg "Device Model: $(ubus call system board | grep '\"model\"' | sed 's/ \+/ /g' | awk -F'\"' '{print $4}')"
 msg "Device Board: $(ubus call system board | grep '\"board_name\"' | sed 's/ \+/ /g' | awk -F'\"' '{print $4}')"
 sed -i -E "s|icons/port_%s.png|icons/port_%s.gif|g" /www/luci-static/resources/view/status/include/29_ports.js
-if grep -q "ImmortalWrt" /etc/openwrt_release; then
-  sed -i -E 's/\(DISTRIB_DESCRIPTION=.ImmortalWrt [0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1'/' /etc/openwrt_release
-  sed -i -E 's/\(PRETTY_NAME=.ImmortalWrt [0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1"/' /usr/lib/os-release
-  msg "Branch version: $(grep 'DISTRIB_DESCRIPTION=' /etc/openwrt_release | awk -F\"'\" '{print $2}')"
-elif grep -q "OpenWrt" /etc/openwrt_release; then
-  sed -i -E 's/\(DISTRIB_DESCRIPTION=.OpenWrt [0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1'/' /etc/openwrt_release
-  sed -i -E 's/\(DISTRIB_DESCRIPTION=.OpenWrt [0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1'/' /usr/lib/os-release
-  sed -i -E 's/\(PRETTY_NAME=.OpenWrt [0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1"/' /usr/lib/os-release
-  msg "Branch version: $(grep 'DISTRIB_DESCRIPTION=' /etc/openwrt_release | awk -F\"'\" '{print $2}')"
-fi
+# ✅ panggil fungsi baru
+fix_branch_version
 msg "###############################################"
 
 # Set hostname and Timezone to Asia/Jakarta
