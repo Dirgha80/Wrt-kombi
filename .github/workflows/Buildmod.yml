@@ -339,8 +339,8 @@ jobs:
         if: ${{ inputs.rootfs_url != '' }}
         run: |
           echo "[🗂] Inject files/ ke rootfs..."
-          cd imagebuilder
-          ROOTFS=bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz
+          cd imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}
+          ROOTFS=openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz
           mkdir -p inject_rootfs
           tar -xzf $ROOTFS -C inject_rootfs
           if [ -d files ]; then
