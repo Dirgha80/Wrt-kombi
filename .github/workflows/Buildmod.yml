@@ -500,7 +500,7 @@ jobs:
           🇲🇨 dev      : <b>houjie80</b>
           📦 Target   : <b>${{ inputs.target }}</b>
           🌐 Release  : <b>${{ inputs.releases_branch }}</b>
-          🖥 Kernel   : <b>$${{ env.kernel }}</b>
+          🖥 Kernel   : <b>${{ inputs.openwrt_kernel }}</b>
           ⏰ Tanggal  : <b>$DATE</b>
           🔗 Unduh    : <a href=\"${DOWNLOAD_URL}\">Klik di sini</a>"
 
@@ -518,7 +518,7 @@ jobs:
           🇲🇨 dev      : <b>houjie80</b>
           📦 Target   : <b>${{ inputs.target }}</b>
           🌐 Release  : <b>${{ inputs.releases_branch }}</b>
-          🖥 Kernel   : <b>$${{ env.kernel }}</b>
+          🖥 Kernel   : <b>${{ inputs.openwrt_kernel }}</b>
           ⏰ Tanggal  : <b>$DATE</b>
           🔗 Unduh    : <a href=\"${DOWNLOAD_URL}\">Klik di sini</a>"
 
