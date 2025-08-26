@@ -71,18 +71,19 @@ fix_branch_version() {
     local os_release="/usr/lib/os-release"
 
     if grep -q "ImmortalWrt" "$release_file"; then
-        sed -i -E 's/\(DISTRIB_DESCRIPTION=.ImmortalWrt [0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1'/' $release_file
-        sed -i -E 's/\(PRETTY_NAME=.ImmortalWrt [0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1"/' $os_release
-        sed -i -E 's|services/ttyd|system/ttyd|g' /usr/share/ucode/luci/template/themes/material/header.ut
-        msg "Branch version: $(grep "DISTRIB_DESCRIPTION=" $release_file | awk -F\"'\" '{print $2}')"
+        sed -i -E "s|(DISTRIB_DESCRIPTION='ImmortalWrt [0-9]+\.[0-9]+\.[0-9]+).*|\1'|" "$release_file"
+        sed -i -E "s|(PRETTY_NAME=\"ImmortalWrt [0-9]+\.[0-9]+\.[0-9]+).*|\1\"|" "$os_release"
+        sed -i -E "s|services/ttyd|system/ttyd|g" /usr/share/ucode/luci/template/themes/material/header.ut
+        msg "Branch version: $(grep 'DISTRIB_DESCRIPTION=' "$release_file" | awk -F"'" '{print $2}')"
 
     elif grep -q "OpenWrt" "$release_file"; then
-        sed -i -E 's/\(DISTRIB_DESCRIPTION=.OpenWrt [0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1'/' $release_file
-        sed -i -E 's/\(DISTRIB_DESCRIPTION=.OpenWrt [0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1'/' $os_release
-        sed -i -E 's/\(PRETTY_NAME=.OpenWrt [0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1"/' $os_release
-        msg "Branch version: $(grep "DISTRIB_DESCRIPTION=" $release_file | awk -F\"'\" '{print $2}')"
+        sed -i -E "s|(DISTRIB_DESCRIPTION='OpenWrt [0-9]+\.[0-9]+\.[0-9]+).*|\1'|" "$release_file"
+        sed -i -E "s|(DISTRIB_DESCRIPTION='OpenWrt [0-9]+\.[0-9]+\.[0-9]+).*|\1'|" "$os_release"
+        sed -i -E "s|(PRETTY_NAME=\"OpenWrt [0-9]+\.[0-9]+\.[0-9]+).*|\1\"|" "$os_release"
+        msg "Branch version: $(grep 'DISTRIB_DESCRIPTION=' "$release_file" | awk -F"'" '{print $2}')"
     fi
 }
+
 
 # dont remove!
 msg "Installed Time: $(date '+%A, %d %B %Y %T')"
