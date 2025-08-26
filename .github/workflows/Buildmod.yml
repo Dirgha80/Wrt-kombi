@@ -161,9 +161,10 @@ jobs:
           DATE=$(date +"%Y-%m-%d %H:%M:%S")
           MESSAGE="🚀 Build firmware dimulai...
           ═══════════════════════
+          🇲🇨 dev      : <b>houjie80</b>
           📦 Target   : <b>${{ inputs.target }}</b>
           🌐 Release  : <b>${{ inputs.releases_branch }}</b>
-          🖥 Kernel   : <b>${{ inputs.openwrt_kernel }}</b>
+          🖥 Kernel   : <b>$${{ env.kernel }}</b>
           ⏰ Tanggal  : <b>$DATE</b>"
 
           curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
