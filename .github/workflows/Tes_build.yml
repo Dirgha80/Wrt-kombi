@@ -22,6 +22,7 @@ on:
           - immortalwrt:23.05.4
           - openwrt:24.10.2
           - openwrt:23.05.5
+          - openwrt:23.05.6
   
       target:
         description: "Select device Target"
