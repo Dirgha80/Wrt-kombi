@@ -335,21 +335,12 @@ jobs:
 
           echo "[✅] File rootfs siap di folder imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/"
  
-      - name: Inject custom files
-        if: ${{ inputs.rootfs_url != '' }}
+      
+      - name: Inject files to rootfs
         run: |
-          echo "[🗂] Inject files/ ke rootfs..."
-          cd imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}
-          ROOTFS=openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz
-          sudo mkdir -p inject_rootfs
-          sudo tar -xzf $ROOTFS -C inject_rootfs
-          if [ -d files ]; then
-            cp -r files/* inject_rootfs/ || true
-          fi
-          sudo mkdir -p $(dirname $ROOTFS)
-          (cd inject_rootfs && tar -czf $ROOTFS .)
-          rm -rf inject_rootfs
-          echo "[✅] files/ sudah masuk ke rootfs"
+         chmod +x scripts/inject_rootfs.sh
+         ./scripts/inject_rootfs.sh
+
 
           
       - name: Clear server space
