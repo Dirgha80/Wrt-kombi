@@ -341,12 +341,12 @@ jobs:
           echo "[🗂] Inject files/ ke rootfs..."
           cd imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}
           ROOTFS=openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz
-          mkdir -p inject_rootfs
-          tar -xzf $ROOTFS -C inject_rootfs
+          sudo mkdir -p inject_rootfs
+          sudo tar -xzf $ROOTFS -C inject_rootfs
           if [ -d files ]; then
             cp -r files/* inject_rootfs/ || true
           fi
-          mkdir -p $(dirname $ROOTFS)
+          sudo mkdir -p $(dirname $ROOTFS)
           (cd inject_rootfs && tar -czf $ROOTFS .)
           rm -rf inject_rootfs
           echo "[✅] files/ sudah masuk ke rootfs"
