@@ -6,7 +6,7 @@
 #                https://downloads.immortalwrt.org/releases
 #=====================================================================================
 
-name: Build sdcard+via url+tunell+cache
+name: Build sdcard+via url+tunell+files
 
 on:
   repository_dispatch:
@@ -22,6 +22,7 @@ on:
           - immortalwrt:23.05.4
           - openwrt:24.10.2
           - openwrt:23.05.5
+          - openwrt:23.05.6
   
       target:
         description: "Select device Target"
@@ -169,34 +170,6 @@ jobs:
           -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
           -d parse_mode="HTML" \
           --data-urlencode text="$MESSAGE"
-          
-            # =============== CACHES ===============
-      - name: Cache APT packages
-        uses: actions/cache@v3
-        with:
-          path: /var/cache/apt
-          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/*.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-apt-
-
-      - name: Cache pip
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('.github/workflows/*.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Cache ccache (per-target)
-        uses: actions/cache@v3
-        with:
-          path: ~/.ccache
-          key: ${{ runner.os }}-ccache-${{ matrix.target }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-ccache-${{ matrix.target }}-
-            ${{ runner.os }}-ccache-
-      # ======================================
-     
 
       - name: Initialization environment (normal)
         # if: github.event.inputs.target != 'all' && !cancelled()
@@ -216,10 +189,6 @@ jobs:
           echo -e "[\033[94m INFO \033[0m] TARGET: ${{ matrix.target }}"
           echo "BUILD_DATE=$(date +'%d-%m-%y %H:%M:%S')" >> $GITHUB_ENV
           echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
-          # Aktifkan ccache
-          export PATH="/usr/lib/ccache:$PATH"
-          echo 'export PATH="/usr/lib/ccache:$PATH"' >> ~/.bashrc
-          ccache -M 2G   # batasi cache ke 2GB biar runner gak penuh
 
       - name: Setup Environment Variables
         id: init
@@ -366,7 +335,19 @@ jobs:
 
           echo "[✅] File rootfs siap di folder imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/"
  
-  
+      - name: Inject custom files
+        if: ${{ inputs.rootfs_url != '' }}
+        run: |
+          echo "[🗂] Inject files/ ke rootfs..."
+          ROOTFS=imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz
+          mkdir -p inject_rootfs
+          tar -xzf $ROOTFS -C inject_rootfs
+          if [ -d files ]; then
+            cp -r files/* inject_rootfs/ || true
+          fi
+          (cd inject_rootfs && tar -czf ../$ROOTFS .)
+          rm -rf inject_rootfs
+          echo "[✅] files/ sudah masuk ke rootfs"
       - name: Clear server space
         if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
         run: |
