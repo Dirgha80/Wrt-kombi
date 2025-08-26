@@ -348,6 +348,7 @@ jobs:
           (cd inject_rootfs && tar -czf ../$ROOTFS .)
           rm -rf inject_rootfs
           echo "[✅] files/ sudah masuk ke rootfs"
+          
       - name: Clear server space
         if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
         run: |
