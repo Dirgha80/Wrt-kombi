@@ -472,13 +472,22 @@ jobs:
             ./scripts/MODSDCARD.sh
           echo "status=success" >> $GITHUB_OUTPUT
 
-      
+      - name: List compiled images
+        run: |
+           echo "📂 Files in compiled_images/"
+           ls -lh imagebuilder/compiled_images || true
+           echo
+           echo "📂 Files in compiled_images/mod/"
+           ls -lh imagebuilder/compiled_images/mod || true
+
       - name: Upload the packaged OpenWrt
         uses: ncipollo/release-action@main
         if: ${{ steps.modsdcard.outputs.status }} == 'success' && !cancelled()
         with:
           tag: HOUJIE-Wrt_${{ env.openwrt_board }}
-          artifacts: imagebuilder/compiled_images/mod/*
+          artifacts: |
+            imagebuilder/compiled_images/*.tar.gz
+            imagebuilder/compiled_images/mod/*.img.gz
           allowUpdates: true
           removeArtifacts: false
           replacesArtifacts: true
