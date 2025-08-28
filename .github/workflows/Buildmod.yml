@@ -375,12 +375,27 @@ jobs:
           shopt -s nullglob
           echo -e "[\033[95m STEPS \033[0m] Prepare File.."
           mkdir -p compiled_images/mod
-          if [[ "${{ env.TARGET_NAME }}" != "amlogic" ]]; then
-            for file in bin/targets/*/*/*.img.gz; do mv "$file" compiled_images; done
+
+          if [[ "${{ env.TARGET_NAME }}" == "amlogic" ]]; then
+            for file in bin/targets/*/*/*rootfs.tar.gz; do
+              if [ -f "$file" ]; then
+                base="$(basename "$file" -rootfs.tar.gz | sed 's/^openwrt/HOUJIE-WRT/')"
+                new_name="${base}_${{ env.TUNNEL_OPTION }}-rootfs.tar.gz"
+                mv "$file" compiled_images/$new_name
+              fi
+            done
           else
-            for file in bin/targets/*/*/*rootfs.tar.gz; do mv "$file" compiled_images; done
+            for file in bin/targets/*/*/*.img.gz; do
+              if [ -f "$file" ]; then
+                base="$(basename "$file" .img.gz | sed 's/^openwrt/HOUJIE-WRT/')"
+                new_name="${base}_${{ env.TUNNEL_OPTION }}.img.gz"
+                mv "$file" compiled_images/$new_name
+              fi
+            done
           fi
-          echo -e "INFO files list: \n$(ls -l compiled_images 2>/dev/null)"
+
+          echo -e "\n[INFO] Files in compiled_images:"
+          ls -lh compiled_images || true
 
       - name: Packaging OpenWrt For Amlogic
         id: repack
