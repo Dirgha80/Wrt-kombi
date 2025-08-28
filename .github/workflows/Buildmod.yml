@@ -463,6 +463,7 @@ jobs:
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "${MSG_SUCCESS} Status: Success"
           echo -e "INFO files list: \n$(ls -l compiled_images 2>/dev/null)"
+          echo -e "INFO files list (compiled_images/mod): \n$(ls -l compiled_images/mod 2>/dev/null)"
           
       - name: Mod SDCard  
         id: modsdcard
