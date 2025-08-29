@@ -19,8 +19,10 @@ on:
         type: choice
         options:
           - immortalwrt:24.10.1
+          - immortalwrt:24.10.2
           - immortalwrt:23.05.4
           - openwrt:24.10.2
+          - openwrt:24.10.1
           - openwrt:23.05.5
           - openwrt:23.05.6
   
