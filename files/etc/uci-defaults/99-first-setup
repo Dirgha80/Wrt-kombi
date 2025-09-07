@@ -93,7 +93,7 @@ fix_branch_version() {
 
     elif grep -q "OpenWrt" "$release_file"; then
         sed -i -E "s|(DISTRIB_DESCRIPTION='OpenWrt [0-9]+\.[0-9]+\.[0-9]+).*|\1'|" "$release_file"
-        sed -i -E "s|(DISTRIB_DESCRIPTION='OpenWrt [0-9]+\.[0-9]+\.[0-9]+).*|\1'|" "$os_release"
+        # sed -i -E "s|(DISTRIB_DESCRIPTION='OpenWrt [0-9]+\.[0-9]+\.[0-9]+).*|\1'|" "$os_release"
         sed -i -E "s|(PRETTY_NAME=\"OpenWrt [0-9]+\.[0-9]+\.[0-9]+).*|\1\"|" "$os_release"
         msg "Branch version: $(grep 'DISTRIB_DESCRIPTION=' "$release_file" | awk -F"'" '{print $2}')"
     fi
