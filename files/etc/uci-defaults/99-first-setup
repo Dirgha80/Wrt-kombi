@@ -4,10 +4,11 @@
 exec > /root/houjie-wrt.log 2>&1
 
 msg() {
-    local DATE=$(date '+%d %B %Y %T')
-    echo "[ INFO FIRST SETUP ] $1"
-    logger -p "notice" "[ INFO FIRST SETUP ] $1"
+    local DATE=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "[$DATE] [ INFO FIRST SETUP ] $1"
+    logger -p notice "[$DATE] [ INFO FIRST SETUP ] $1"
 }
+
 
 # Fungsi setup wireless 2.4 GHz dan 5 GHz
 setup_wireless() {
