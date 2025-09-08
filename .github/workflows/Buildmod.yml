@@ -92,6 +92,7 @@ on:
           - imagebuilderA.sh
           - imagebuilderB.sh  
           - imagebuilderC.sh  
+          - imagebuilderD.sh
       rootfs_url:    
         description: "Optional: Download ROOTFS archive from URL"
         required: false
