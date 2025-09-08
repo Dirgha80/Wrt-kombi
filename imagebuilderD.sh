@@ -95,7 +95,9 @@ download_packages() {
                 
                 while [ $attempt -le $max_attempts ]; do
                     echo -e "${INFO} Attempt $attempt to download $filename"
-                    if curl -fsSL --max-time 60 --retry 2 -o "${filename}.ipk" "$full_url"; then
+                    if ! curl -fsSL --max-time 60 --retry 2 -O "$full_url"; then
+                    error_msg "FAILED: Could not download $filename from $full_url"
+                else
                         download_success=true
                         break
                     else
@@ -413,8 +415,11 @@ custom_packages() {
         "luci-app-eqosplus|https://dl.openwrt.ai/packages-${CURVER}/$ARCH_3/kiddin9"
         "luci-app-tinyfilemanager|https://dl.openwrt.ai/packages-${CURVER}/$ARCH_3/kiddin9"
     )
-    download_packages "custom" other_packages[@]
+    download_packages "custom" "$other_packages[@]"
 
+    echo -e "${INFO} Final packages in imagebuilder/packages:"
+    ls -lh "${imagebuilder_path}/packages/"
+    
     # OpenClash
     openclash_api="https://api.github.com/repos/tes-rep/OpenClash/releases"
     openclash_file_ipk="luci-app-openclash"
