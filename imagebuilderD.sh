@@ -185,91 +185,100 @@ download_imagebuilder() {
     cd ${make_path}
     echo -e "${STEPS} Start downloading OpenWrt files..."
 
-    if [[ "${op_target}" == "amlogic" || "${op_target}" == "AMLOGIC" ]]; then
-        op_target="amlogic"
-        target_profile=""
-        target_system="armsr/armv8"
-        target_name="armsr-armv8"
-        ARCH_1="arm64"
-        ARCH_2="aarch64"
-        ARCH_3="aarch64_generic"
-    elif [[ "${op_target}" == "rpi-3" ]]; then
-        op_target="rpi-3"
-        target_profile="rpi-3"
-        target_system="bcm27xx/bcm2710"
-        target_name="bcm27xx-bcm2710"
-        ARCH_1="arm64"
-        ARCH_2="aarch64"
-        ARCH_3="aarch64_cortex-a53"
-    elif [[ "${op_target}" == "rpi-4" ]]; then
-        op_target="rpi-4"
-        target_profile="rpi-4"
-        target_system="bcm27xx/bcm2711"
-        target_name="bcm27xx-bcm2711"
-        ARCH_1="arm64"
-        ARCH_2="aarch64"
-        ARCH_3="aarch64_cortex-a72"
-    elif [[ "${op_target}" == "friendlyarm_nanopi-r2c" ]]; then
-        op_target="nanopi-r2c"
-        target_profile="friendlyarm_nanopi-r2c"
-        target_system="rockchip/armv8"
-        target_name="rockchip-armv8"
-        ARCH_1="arm64"
-        ARCH_2="aarch64"
-        ARCH_3="aarch64_generic"
-    elif [[ "${op_target}" == "friendlyarm_nanopi-r2s" ]]; then
-        op_target="nanopi-r2s"
-        target_profile="friendlyarm_nanopi-r2s"
-        target_system="rockchip/armv8"
-        target_name="rockchip-armv8"
-        ARCH_1="arm64"
-        ARCH_2="aarch64"
-        ARCH_3="aarch64_generic"
-    elif [[ "${op_target}" == "friendlyarm_nanopi-r4s" ]]; then
-        op_target="nanopi-r4s"
-        target_profile="friendlyarm_nanopi-r4s"
-        target_system="rockchip/armv8"
-        target_name="rockchip-armv8"
-        ARCH_1="arm64"
-        ARCH_2="aarch64"
-        ARCH_3="aarch64_generic"
-    elif [[ "${op_target}" == "xunlong_orangepi-r1-plus" ]]; then
-        op_target="orangepi-r1-plus"
-        target_profile="xunlong_orangepi-r1-plus"
-        target_system="rockchip/armv8"
-        target_name="rockchip-armv8"
-        ARCH_1="arm64"
-        ARCH_2="aarch64"
-        ARCH_3="aarch64_generic"
-    elif [[ "${op_target}" == "xunlong_orangepi-r1-plus-lts" ]]; then
-        op_target="orangepi-r1-plus-lts"
-        target_profile="xunlong_orangepi-r1-plus-lts"
-        target_system="rockchip/armv8"
-        target_name="rockchip-armv8"
-        ARCH_1="arm64"
-        ARCH_2="aarch64"
-        ARCH_3="aarch64_generic"
-    elif [[ "${op_target}" == "generic" || "${op_target}" == "x86-64" || "${op_target}" == "x86_64" ]]; then
-        op_target="x86-64"
-        target_profile="generic"
-        target_system="x86/64"
-        target_name="x86-64"
-        ARCH_1="amd64"
-        ARCH_2="x86_64"
-        ARCH_3="x86_64"
-    fi
-
+    # Perbaikan: Menggunakan case statement untuk readability
+    case "${op_target}" in
+        amlogic|AMLOGIC)
+            op_target="amlogic"
+            target_profile=""
+            target_system="armsr/armv8"
+            target_name="armsr-armv8"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_generic"
+            ;;
+        rpi-3)
+            op_target="rpi-3"
+            target_profile="rpi-3"
+            target_system="bcm27xx/bcm2710"
+            target_name="bcm27xx-bcm2710"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_cortex-a53"
+            ;;
+        rpi-4)
+            op_target="rpi-4"
+            target_profile="rpi-4"
+            target_system="bcm27xx/bcm2711"
+            target_name="bcm27xx-bcm2711"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_cortex-a72"
+            ;;
+        friendlyarm_nanopi-r2c|nanopi-r2c)
+            op_target="nanopi-r2c"
+            target_profile="friendlyarm_nanopi-r2c"
+            target_system="rockchip/armv8"
+            target_name="rockchip-armv8"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_generic"
+            ;;
+        friendlyarm_nanopi-r2s|nanopi-r2s)
+            op_target="nanopi-r2s"
+            target_profile="friendlyarm_nanopi-r2s"
+            target_system="rockchip/armv8"
+            target_name="rockchip-armv8"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_generic"
+            ;;
+        friendlyarm_nanopi-r4s|nanopi-r4s)
+            op_target="nanopi-r4s"
+            target_profile="friendlyarm_nanopi-r4s"
+            target_system="rockchip/armv8"
+            target_name="rockchip-armv8"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_generic"
+            ;;
+        xunlong_orangepi-r1-plus|orangepi-r1-plus)
+            op_target="orangepi-r1-plus"
+            target_profile="xunlong_orangepi-r1-plus"
+            target_system="rockchip/armv8"
+            target_name="rockchip-armv8"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_generic"
+            ;;
+        xunlong_orangepi-r1-plus-lts|orangepi-r1-plus-lts)
+            op_target="orangepi-r1-plus-lts"
+            target_profile="xunlong_orangepi-r1-plus-lts"
+            target_system="rockchip/armv8"
+            target_name="rockchip-armv8"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_generic"
+            ;;
+        generic|x86-64|x86_64)
+            op_target="x86-64"
+            target_profile="generic"
+            target_system="x86/64"
+            target_name="x86-64"
+            ARCH_1="amd64"
+            ARCH_2="x86_64"
+            ARCH_3="x86_64"
+            ;;
+        *)
+            error_msg "Unsupported target: ${op_target}"
+            ;;
+    esac
     # Deteksi ekstensi file dan perintah ekstrak berdasarkan versi OpenWrt
-if echo "$op_branch" | grep -q "^24\."; then
-    FILE_EXT="tar.zst"
-    TAR_CMD="tar --zstd -xvf"
-elif echo "$op_branch" | grep -q "^23\."; then
-    FILE_EXT="tar.xz"
-    TAR_CMD="tar -xvJf"
-else
-    echo "[ERROR] Versi tidak dikenali untuk op_branch: $op_branch"
-    exit 1
-fi
+local file_ext="" tar_cmd=""
+    case "$op_branch" in
+        23.*) file_ext="tar.xz";  tar_cmd="tar -xvJf" ;;
+        24.*) file_ext="tar.zst"; tar_cmd="tar --zstd -xvf" ;;
+        *)    error_msg "Unsupported branch: $op_branch" ;;
+    esac
 
 # Nama file & URL imagebuilder
 download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${FILE_EXT}"
