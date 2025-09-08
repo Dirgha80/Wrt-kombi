@@ -272,13 +272,18 @@ download_imagebuilder() {
             error_msg "Unsupported target: ${op_target}"
             ;;
     esac
+	
     # Deteksi ekstensi file dan perintah ekstrak berdasarkan versi OpenWrt
-local file_ext="" tar_cmd=""
-    case "$op_branch" in
-        23.*) file_ext="tar.xz";  tar_cmd="tar -xvJf" ;;
-        24.*) file_ext="tar.zst"; tar_cmd="tar --zstd -xvf" ;;
-        *)    error_msg "Unsupported branch: $op_branch" ;;
-    esac
+if echo "$op_branch" | grep -q "^24\."; then
+    FILE_EXT="tar.zst"
+    TAR_CMD="tar --zstd -xvf"
+elif echo "$op_branch" | grep -q "^23\."; then
+    FILE_EXT="tar.xz"
+    TAR_CMD="tar -xvJf"
+else
+    echo "[ERROR] Versi tidak dikenali untuk op_branch: $op_branch"
+    exit 1
+fi
 
 # Nama file & URL imagebuilder
 download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${FILE_EXT}"
