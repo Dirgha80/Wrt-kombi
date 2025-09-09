@@ -237,41 +237,33 @@ download_imagebuilder() {
     esac
 	
     local file_ext=""
-    local tar_cmd=""
-    local file_type=$(curl -sI "https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/" | head -n1 | grep -oE 'zst|xz|gz')
-    
-    case "${file_type}" in
-        "zst")
-            file_ext="tar.zst"
-            tar_cmd="tar --zstd -xvf"
-            ;;
-        "xz")
-            file_ext="tar.xz"
-            tar_cmd="tar -xvJf"
-            ;;
-        *)
-            error_msg "Unsupported file type or URL not found for op_branch: $op_branch"
-            ;;
-    esac
+    if echo "$op_branch" | grep -q "^24\."; then
+    FILE_EXT="tar.zst"
+    TAR_CMD="tar --zstd -xvf"
+elif echo "$op_branch" | grep -q "^23\."; then
+    FILE_EXT="tar.xz"
+    TAR_CMD="tar -xvJf"
+else
+    echo "[ERROR] Versi tidak dikenali untuk op_branch: $op_branch"
+    exit 1
+fi
 
-    download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${file_ext}"
-    imagebuilder_file="${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${file_ext}"
+# Nama file & URL imagebuilder
+download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${FILE_EXT}"
+imagebuilder_file="${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${FILE_EXT}"
 
-    if ! curl -fsSOL --retry 3 "${download_file}"; then
-        error_msg "Download failed: [ ${download_file} ]"
-    fi
-    echo -e "${SUCCESS} Download Base ${op_branch} ${target_name} successfully!"
+# Download
+curl -fsSOL "${download_file}"
+[[ "$?" -eq 0 ]] || error_msg "Download failed: [ ${download_file} ]"
+echo -e "${SUCCESS} Download Base ${op_branch} ${target_name} successfully!"
 
-    if ! ${tar_cmd} "${imagebuilder_file}"; then
-        error_msg "Failed to extract imagebuilder file."
-    fi
-    sync && rm -f "${imagebuilder_file}"
-    mv -f *-imagebuilder-* "${openwrt_dir}" || error_msg "Failed to move extracted directory."
+# Ekstrak dan ubah nama direktori
+$TAR_CMD "${imagebuilder_file}" && sync && rm -f "${imagebuilder_file}"
+mv -f *-imagebuilder-* "${openwrt_dir}"
 
-    sync && sleep 3
-    echo -e "${INFO} [ ${make_path} ] directory status: $(ls -al 2>/dev/null)"
+sync && sleep 3
+echo -e "${INFO} [ ${make_path} ] directory status: $(ls -al 2>/dev/null)"
 }
-
 # Adjust related files in the ImageBuilder directory
 adjust_settings() {
     cd "${imagebuilder_path}" || error_msg "Failed to change directory to ${imagebuilder_path}"
