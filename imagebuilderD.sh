@@ -273,16 +273,22 @@ download_imagebuilder() {
             ;;
     esac
 
-    # Deteksi ekstensi file dan perintah ekstrak berdasarkan versi OpenWrt
-if echo "$op_branch" | grep -q "^24\."; then
+# Deteksi ekstensi file dan perintah ekstrak berdasarkan versi OpenWrt
+case "$op_branch" in
+  24.*)
     FILE_EXT="tar.zst"
     TAR_CMD="tar --zstd -xvf"
-elif echo "$op_branch" | grep -q "^23\."; then
+    ;;
+  23.*)
     FILE_EXT="tar.xz"
     TAR_CMD="tar -xvJf"
-else
+    ;;
+  *)
     echo "[ERROR] Versi tidak dikenali untuk op_branch: $op_branch"
     exit 1
+    ;;
+esac
+ 1
 fi
 
 # Nama file & URL imagebuilder
