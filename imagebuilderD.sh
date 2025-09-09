@@ -238,7 +238,7 @@ download_imagebuilder() {
 	
     local file_ext=""
     local tar_cmd=""
-    local file_type=$(curl -sI "https://downloads.${op_source}.org/releases/${op_branch}/targets/${target_system}/" | head -n1 | grep -oE 'zst|xz|gz')
+    local file_type=$(curl -sI "https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/" | head -n1 | grep -oE 'zst|xz|gz')
     
     case "${file_type}" in
         "zst")
@@ -254,8 +254,8 @@ download_imagebuilder() {
             ;;
     esac
 
-    download_file="https://downloads.${op_source}.org/releases/${op_branch}/targets/${target_system}/${op_source}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${file_ext}"
-    imagebuilder_file="${op_source}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${file_ext}"
+    download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${file_ext}"
+    imagebuilder_file="${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${file_ext}"
 
     if ! curl -fsSOL --retry 3 "${download_file}"; then
         error_msg "Download failed: [ ${download_file} ]"
@@ -362,13 +362,13 @@ custom_packages() {
         "luci-app-internet-detector|https://dl.openwrt.ai/packages-${CURVER}/$ARCH_3/kiddin9"
         "internet-detector-mod-modem-restart|https://dl.openwrt.ai/packages-${CURVER}/$ARCH_3/kiddin9"
         "internet-detector|https://dl.openwrt.ai/packages-${CURVER}/$ARCH_3/kiddin9"
-        "modemmanager-rpcd|https://downloads.${op_source}.org/releases/packages-${op_branch}/$ARCH_3/packages"
-        "luci-proto-modemmanager|https://downloads.${op_source}.org/releases/packages-${op_branch}/$ARCH_3/luci"
-        "libqmi|https://downloads.${op_source}.org/releases/packages-${op_branch}/$ARCH_3/packages"
-        "libmbim|https://downloads.${op_source}.org/releases/packages-${op_branch}/$ARCH_3/packages"
-        "modemmanager|https://downloads.${op_source}.org/releases/packages-${op_branch}/$ARCH_3/packages"
-        "sms-tool|https://downloads.${op_source}.org/releases/packages-${op_branch}/$ARCH_3/packages"
-        "tailscale|https://downloads.${op_source}.org/releases/packages-${op_branch}/$ARCH_3/packages"
+        "modemmanager-rpcd|https://downloads.${op_sourse}.org/releases/packages-${op_branch}/$ARCH_3/packages"
+        "luci-proto-modemmanager|https://downloads.${op_sourse}.org/releases/packages-${op_branch}/$ARCH_3/luci"
+        "libqmi|https://downloads.${op_sourse}.org/releases/packages-${op_branch}/$ARCH_3/packages"
+        "libmbim|https://downloads.${op_sourse}.org/releases/packages-${op_branch}/$ARCH_3/packages"
+        "modemmanager|https://downloads.${op_sourse}.org/releases/packages-${op_branch}/$ARCH_3/packages"
+        "sms-tool|https://downloads.${op_sourse}.org/releases/packages-${op_branch}/$ARCH_3/packages"
+        "tailscale|https://downloads.${op_sourse}.org/releases/packages-${op_branch}/$ARCH_3/packages"
         "luci-app-modeminfo|https://dl.openwrt.ai/packages-${CURVER}/$ARCH_3/kiddin9"
         "luci-app-tailscale|https://dl.openwrt.ai/packages-${CURVER}/$ARCH_3/kiddin9"
         "luci-app-diskman|https://dl.openwrt.ai/packages-${CURVER}/$ARCH_3/kiddin9"
@@ -529,7 +529,7 @@ rebuild_firmware() {
         EXCLUDED+=" -dnsmasq"
     fi
 
-    if [ "${op_source}" == "immortalwrt" ]; then
+    if [ "${op_sourse}" == "immortalwrt" ]; then
         EXCLUDED+=" -automount -libustream-openssl -default-settings-chn -luci-i18n-base-zh-cn"
         if [ "$ARCH_2" == "x86_64" ]; then
             EXCLUDED+=" -kmod-usb-net-rtl8152-vendor"
@@ -560,13 +560,13 @@ echo -e "${STEPS} Welcome to Rebuild OpenWrt Using the Image Builder."
 [[ "${1}" =~ ^[a-z]{3,}:[0-9]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:22.03.3 x86-64 or openwrt:22.03.3 amlogic"
 [[ "${2}" =~ ^[a-zA-Z0-9_-]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:22.03.3 x86-64 or openwrt:22.03.3 amlogic"
 
-op_source="${1%:*}"
+op_sourse="${1%:*}"
 op_branch="${1#*:}"
 op_target="${2}"
 TUNNEL_OPTION="${3}"
 
 echo -e "${INFO} Rebuild path: [ ${PWD} ]"
-echo -e "${INFO} Rebuild Source: [ ${op_source} ], Branch: [ ${op_branch} ], Target: ${op_target}"
+echo -e "${INFO} Rebuild Source: [ ${op_sourse} ], Branch: [ ${op_branch} ], Target: ${op_target}"
 echo -e "${INFO} Server space usage before starting to compile: \n$(df -hT "${make_path}") \n"
 
 # Perform related operations
