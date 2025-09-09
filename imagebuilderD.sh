@@ -36,7 +36,6 @@ error_msg() {
 # Fungsi untuk mengunduh paket eksternal
 # USAGE: download_packages <source_type> <package_array>
 download_packages() {
-download_packages() {
     local list=("${!2}")
     if [[ $1 == "github" ]]; then
         for entry in "${list[@]}"; do
