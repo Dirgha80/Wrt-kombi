@@ -386,7 +386,7 @@ custom_packages() {
         "luci-app-internet-detector|https://dl.openwrt.ai/packages-${CURVER}/$ARCH_3/kiddin9"
         "internet-detector-mod-modem-restart|https://dl.openwrt.ai/packages-${CURVER}/$ARCH_3/kiddin9"
         "internet-detector|https://dl.openwrt.ai/packages-${CURVER}/$ARCH_3/kiddin9"
-        "modemmanager-rpcd|https://downloads.${op_sourse}.org/releases/packages-${op_branch}/$ARCH_3/packages"
+        # "modemmanager-rpcd|https://downloads.${op_sourse}.org/releases/packages-${op_branch}/$ARCH_3/packages"
         "luci-proto-modemmanager|https://downloads.${op_sourse}.org/releases/packages-${op_branch}/$ARCH_3/luci"
         "libqmi|https://downloads.${op_sourse}.org/releases/packages-${op_branch}/$ARCH_3/packages"
         "libmbim|https://downloads.${op_sourse}.org/releases/packages-${op_branch}/$ARCH_3/packages"
