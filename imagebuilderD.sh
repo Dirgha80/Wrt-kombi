@@ -36,16 +36,15 @@ error_msg() {
 # Fungsi untuk mengunduh paket eksternal
 # USAGE: download_packages <source_type> <package_array>
 download_packages() {
-    local source_type="$1"
+download_packages() {
     local list=("${!2}")
-
-    if [[ "$source_type" == "github" ]]; then
+    if [[ $1 == "github" ]]; then
         for entry in "${list[@]}"; do
             IFS="|" read -r filename base_url <<< "$entry"
             echo -e "${INFO} Processing file: $filename"
             # Menggunakan jq untuk parsing JSON lebih andal
-            local file_url=$(curl -s "$base_url" | jq -r '.[0].assets[] | select(.name | contains("'"$filename"'")) | .browser_download_url' | sort -V | tail -n 1)
-
+            file_url=$(curl -s "$base_url" | jq -r '.[0].assets[] | select(.name | contains("'"$filename"'")) | .browser_download_url' | sort -V | tail -n 1)
+            
             if [ -n "$file_url" ]; then
                 echo -e "${INFO} Downloading $(basename "$file_url")"
                 echo -e "${INFO} From $file_url"
@@ -58,12 +57,13 @@ download_packages() {
                 error_msg "Failed to retrieve packages [$filename] from $base_url."
             fi
         done
-    elif [[ "$source_type" == "custom" ]]; then
+    elif [[ $1 == "custom" ]]; then
         for entry in "${list[@]}"; do
             IFS="|" read -r filename base_url <<< "$entry"
             echo -e "${INFO} Processing file: $filename"
 
             local file_url=""
+            # Pola regex yang lebih spesifik
             local search_patterns=(
                 "${filename}[_-][^\"/]*\.ipk"
                 "${filename}_[^\"/]*\.ipk"
