@@ -194,56 +194,77 @@ jobs:
           echo "BUILD_DATE=$(date +'%d-%m-%y %H:%M:%S')" >> $GITHUB_ENV
           echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
 
+      
       - name: Setup Environment Variables
         id: init
         run: |
-          if [ "$TARGET" == "Raspberry Pi 3B" ]; then
-            echo "TARGET_NAME=rpi-3" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_rpi-3" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Raspberry Pi 4B" ]; then
+         case "$TARGET" in
+           "Raspberry Pi 3B")
+             echo "TARGET_NAME=rpi-3" >> $GITHUB_ENV
+             echo "TAG_NAME=openwrt_rpi-3" >> $GITHUB_ENV
+             ;;
+          "Raspberry Pi 4B")
             echo "TARGET_NAME=rpi-4" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_rpi-4" >> $GITHUB_ENV
-          elif [ "$TARGET" == "NanoPi R2C" ]; then
-            echo "TARGET_NAME=friendlyarm_nanopi-r2c" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_friendlyarm_nanopi-r2c" >> $GITHUB_ENV
-          elif [ "$TARGET" == "NanoPi R2S" ]; then
-            echo "TARGET_NAME=friendlyarm_nanopi-r2s" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_friendlyarm_nanopi-r2s" >> $GITHUB_ENV
-          elif [ "$TARGET" == "NanoPi R4S" ]; then
-            echo "TARGET_NAME=friendlyarm_nanopi-r4s" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_friendlyarm_nanopi-r4s" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Orange Pi R1 Plus" ]; then
-            echo "TARGET_NAME=xunlong_orangepi-r1-plus" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_xunlong_orangepi-r1-plus" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Orange Pi R1 Plus LTS" ]; then
-            echo "TARGET_NAME=xunlong_orangepi-r1-plus-lts" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_xunlong_xunlong_orangepi-r1-plus-lts" >> $GITHUB_ENV
-          elif [ "$TARGET" == "x86-64" ]; then
-            echo "TARGET_NAME=generic" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_generic" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Amlogic HG680P" ]; then
-            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
-            echo "openwrt_board=s905x" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_amlogic_s905x" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Amlogic B860H-V5" ]; then
-            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
-            echo "openwrt_board=s905x2-b860h-v5" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_amlogic_s905x-b860h" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Amlogic B860H-V1-V2" ]; then
-            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
-            echo "openwrt_board=s905x2" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_amlogic_s905x2" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Amlogic AT01" ]; then
-            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
-            echo "openwrt_board=s905x4-advan" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_amlogic_s905x4" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Amlogic HG680-FJ" ]; then
-            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
-            echo "openwrt_board=s905x2-hg680-fj" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_amlogic_s905x2-hg680-fj" >> $GITHUB_ENV 
-          fi
-          echo "status=success" >> ${GITHUB_OUTPUT}
-          echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
+            ;;
+         "NanoPi R2C")
+           echo "TARGET_NAME=friendlyarm_nanopi-r2c" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_friendlyarm_nanopi-r2c" >> $GITHUB_ENV
+           ;;
+         "NanoPi R2S")
+           echo "TARGET_NAME=friendlyarm_nanopi-r2s" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_friendlyarm_nanopi-r2s" >> $GITHUB_ENV
+           ;;
+         "NanoPi R4S")
+           echo "TARGET_NAME=friendlyarm_nanopi-r4s" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_friendlyarm_nanopi-r4s" >> $GITHUB_ENV
+           ;;
+         "Orange Pi R1 Plus")
+           echo "TARGET_NAME=xunlong_orangepi-r1-plus" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_xunlong_orangepi-r1-plus" >> $GITHUB_ENV
+           ;;
+         "Orange Pi R1 Plus LTS")
+           echo "TARGET_NAME=xunlong_orangepi-r1-plus-lts" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_xunlong_orangepi-r1-plus-lts" >> $GITHUB_ENV
+           ;;
+         "x86-64")
+           echo "TARGET_NAME=generic" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_generic" >> $GITHUB_ENV
+           ;;
+         "Amlogic HG680P")
+           echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+           echo "openwrt_board=s905x" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_amlogic_s905x" >> $GITHUB_ENV
+           ;;
+         "Amlogic B860H-V5")
+           echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+           echo "openwrt_board=s905x2-b860h-v5" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_amlogic_s905x-b860h" >> $GITHUB_ENV
+           ;;
+         "Amlogic B860H-V1-V2")
+           echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+           echo "openwrt_board=s905x2" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_amlogic_s905x2" >> $GITHUB_ENV
+           ;;
+         "Amlogic AT01")
+           echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+           echo "openwrt_board=s905x4-advan" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_amlogic_s905x4" >> $GITHUB_ENV
+           ;;
+         "Amlogic HG680-FJ")
+           echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+           echo "openwrt_board=s905x2-hg680-fj" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_amlogic_s905x2-hg680-fj" >> $GITHUB_ENV
+           ;;
+         *)
+           echo "Unknown TARGET: $TARGET"
+           exit 1
+           ;;
+         esac
+
+         echo "status=success" >> ${GITHUB_OUTPUT}
+         echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
+
 
       - name: Build Rootfs [ ${{ inputs.releases_branch }} ]
         id: imagebuilder
