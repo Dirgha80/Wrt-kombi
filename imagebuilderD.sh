@@ -42,7 +42,7 @@ download_packages() {
             IFS="|" read -r filename base_url <<< "$entry"
             echo -e "${INFO} Processing file: $filename"
             # Menggunakan jq untuk parsing JSON lebih andal
-            file_url=$(curl -s "$base_url" | jq -r '.[0].assets[] | select(.name | contains("'"$filename"'")) | .browser_download_url' | sort -V | tail -n 1)
+            file_url=$(curl -s "$base_url" | jq -r '.[]?.assets[]? | select(.name | contains("'"$filename"'")) | .browser_download_url' | sort -V | tail -n 1)
             
             if [ -n "$file_url" ]; then
                 echo -e "${INFO} Downloading $(basename "$file_url")"
