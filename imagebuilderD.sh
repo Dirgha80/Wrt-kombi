@@ -1,14 +1,14 @@
 #!/bin/bash
 #================================================================================================
-# Deskripsi: Build OpenWrt dengan Image Builder
+# Description: Build OpenWrt with Image Builder
 # Copyright (C) 2021~ https://github.com/unifreq/openwrt_packit
 # Copyright (C) 2021~ https://github.com/ophub/amlogic-s9xxx-openwrt
 # Copyright (C) 2021~ https://downloads.openwrt.org/releases
 # Copyright (C) 2023~ https://downloads.immortalwrt.org/releases
 #
 #
-# Command: ./config/imagebuilder/imagebuilder.sh <source:branch> <target> [tunnel_option]
-#           ./config/imagebuilder/imagebuilder.sh openwrt:21.02.3 x86_64 openclash
+# Command: ./config/imagebuilder/imagebuilder.sh <source:branch> <target>
+#          ./config/imagebuilder/imagebuilder.sh openwrt:21.02.3 x86_64
 #
 #
 # Set default parameters
@@ -17,8 +17,9 @@ openwrt_dir="imagebuilder"
 imagebuilder_path="${make_path}/${openwrt_dir}"
 custom_files_path="${make_path}/files"
 custom_packages_path="${make_path}/packages"
+custom_scripts_file="${make_path}/scripts"
 
-# Set default parameters for colored output
+# Set default parameters
 STEPS="[\033[95m STEPS \033[0m]"
 INFO="[\033[94m INFO \033[0m]"
 SUCCESS="[\033[92m SUCCESS \033[0m]"
@@ -33,57 +34,79 @@ error_msg() {
     exit 1
 }
 
-# Fungsi untuk mengunduh paket eksternal
-# USAGE: download_packages <source_type> <package_array>
+# External Packages Download
 download_packages() {
-    local list=("${!2}")
+    local list=("${!2}") # Capture array argument
     if [[ $1 == "github" ]]; then
         for entry in "${list[@]}"; do
             IFS="|" read -r filename base_url <<< "$entry"
             echo -e "${INFO} Processing file: $filename"
-            # Menggunakan jq untuk parsing JSON lebih andal
-            file_url=$(curl -s "$base_url" | jq -r '.[]?.assets[]? | select(.name | contains("'"$filename"'")) | .browser_download_url' | sort -V | tail -n 1)
-            
-            if [ -n "$file_url" ]; then
-                echo -e "${INFO} Downloading $(basename "$file_url")"
-                echo -e "${INFO} From $file_url"
-                if curl -fsSL -o "$(basename "$file_url")" "$file_url" --max-time 60 --retry 3; then
-                    echo -e "${SUCCESS} Package [$filename] downloaded successfully."
+            file_urls=$(curl -s "$base_url" | grep "browser_download_url" | grep -oE "https.*/${filename}_[_0-9a-zA-Z\._~-]*\.ipk" | sort -V | tail -n 1)
+            for file_url in $file_urls; do
+                if [ -n "$file_url" ]; then
+                    echo -e "${INFO} Downloading $(basename "$file_url")"
+                    echo -e "${INFO} From $file_url"
+                    curl -fsSL -o "$(basename "$file_url")" "$file_url"
+                    if [ $? -eq 0 ]; then
+                        echo -e "${SUCCESS} Package [$filename] downloaded successfully."
+                    else
+                        error_msg "Failed to download package [$filename]."
+                    fi
                 else
-                    error_msg "Failed to download package [$filename] from $file_url."
+                    error_msg "Failed to retrieve packages [$filename]. Retrying before exit..."
                 fi
-            else
-                error_msg "Failed to retrieve packages [$filename] from $base_url."
-            fi
+            done
         done
     elif [[ $1 == "custom" ]]; then
         for entry in "${list[@]}"; do
             IFS="|" read -r filename base_url <<< "$entry"
             echo -e "${INFO} Processing file: $filename"
-
-            local file_url=""
-            # Pola regex yang lebih spesifik
+            
+            # Array untuk menyimpan pola pencarian
             local search_patterns=(
-                "${filename}[_-][^\"/]*\.ipk"
-                "${filename}_[^\"/]*\.ipk"
-                "${filename}[^\"/]*\.ipk"
+                "\"${filename}[^\"]*\.ipk\""
+                "\"${filename}[^\"]*\.apk\""
+                "${filename}_.*\.ipk"
+				"${filename}_.*\.apk"
+                "${filename}.*\.ipk"
+				"${filename}.*\.apk"
             )
-
+            
+            local file_urls=""
+            local full_url=""
+            
+            # Coba berbagai pola pencarian
             for pattern in "${search_patterns[@]}"; do
-                file_url=$(curl -sL "$base_url" | grep -oE "$pattern" | sort -V | tail -n 1)
-                if [ -n "$file_url" ]; then
-                    file_url="${base_url}/${file_url}"
+                file_urls=$(curl -sL "$base_url" | grep -oE "$pattern" | sed 's/"//g' | sort -V | tail -n 1)
+                if [ -n "$file_urls" ]; then
+                    full_url="${base_url}/${file_urls%%\"*}"
                     break
                 fi
             done
             
-            if [ -n "$file_url" ]; then
-                echo -e "${INFO} Downloading $(basename "$file_url")"
-                echo -e "${INFO} From $file_url"
-                if curl -fsSL -O "$file_url" --max-time 60 --retry 3; then
-                    echo -e "${SUCCESS} Package [$filename] downloaded successfully."
-                else
-                    error_msg "Failed to download package [$filename] from $file_url."
+            # Percobaan download dengan mekanisme fallback
+            if [ -n "$full_url" ]; then
+                echo -e "${INFO} Downloading ${file_urls%%\"*}"
+                echo -e "${INFO} From $full_url"
+                
+                local max_attempts=3
+                local attempt=1
+                local download_success=false
+                
+                while [ $attempt -le $max_attempts ]; do
+                    echo -e "${INFO} Attempt $attempt to download $filename"
+                    if curl -fsSL --max-time 60 --retry 2 -o "${filename}.ipk" "$full_url"; then
+                        download_success=true
+                        break
+                    else
+                        echo -e "${WARNING} Download failed for $filename (Attempt $attempt)"
+                        ((attempt++))
+                        sleep 5
+                    fi
+                done
+                
+                if [ "$download_success" = false ]; then
+                    error_msg "FAILED: Could not download $filename after $max_attempts attempts"
                 fi
             else
                 error_msg "No matching file found for [$filename] at $base_url."
@@ -95,61 +118,75 @@ download_packages() {
 # USAGE:
 # dl_zip_gh "githubuser/repo:branch" "path to extract"
 dl_zip_gh() {
+    # Cek format input
     if [[ "${1}" =~ ^([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+):([a-zA-Z0-9_-]+)$ ]]; then
         github_user="${BASH_REMATCH[1]}"
         repo="${BASH_REMATCH[2]}"
         branch="${BASH_REMATCH[3]}"
         extract_path="${2}"
-        
-        target_dir="${extract_path%/}"
-        
-        [[ -d "${extract_path}" ]] && rm -rf "${extract_path}"
-        mkdir -p "${target_dir}" || error_msg "Failed to create directory: ${target_dir}"
 
+        # Tentukan direktori target
+        if [[ "${extract_path}" == */ ]]; then
+            target_dir="${extract_path%/}"
+        else
+            target_dir="${extract_path}"
+        fi
+
+        [[ -d "${2}" ]] || rm -rf ${2}
+        mkdir -p "${target_dir}"
+
+        # Tentukan nama ZIP dan URL
         zip_file="${target_dir}/${repo}-${branch}.zip"
         zip_url="https://github.com/${github_user}/${repo}/archive/refs/heads/${branch}.zip"
 
+        # Unduh ZIP dari GitHub
         echo -e "${INFO} Downloading ZIP from: ${zip_url}"
-        if ! curl -fsSL -o "${zip_file}" "${zip_url}" --max-time 120 --retry 3; then
-            error_msg "ZIP file not downloaded successfully from ${zip_url}."
-        fi
+        curl -fsSL -o "${zip_file}" "${zip_url}"
 
-        echo -e "${INFO} ZIP file downloaded to: ${zip_file}"
+        # Periksa apakah ZIP berhasil diunduh
+        if [[ -f "${zip_file}" ]]; then
+            echo -e "${INFO} ZIP file downloaded to: ${zip_file}"
 
-        extracted_dir="${target_dir}/${repo}-${branch}"
-        if [[ -d "${extracted_dir}" ]]; then
-            rm -rf "${extracted_dir}"
-        fi
-        
-        echo -e "${INFO} Extracting ${zip_file} to ${target_dir}..."
-        unzip -q "${zip_file}" -d "${target_dir}" || error_msg "Failed to unzip file."
+            # Hapus direktori target jika sudah ada
+            if [[ -d "${target_dir}/${repo}-${branch}" ]]; then
+                echo -e "${INFO} Removing existing directory: ${target_dir}/${repo}-${branch}"
+                rm -rf "${target_dir}/${repo}-${branch}"
+            fi
 
-        if [[ -d "${extracted_dir}" ]]; then
-            echo -e "${INFO} Moving extracted directory content to ${target_dir}..."
-            shopt -s dotglob
-            mv "${extracted_dir}"/* "${target_dir}/" || error_msg "Failed to move extracted files."
-            shopt -u dotglob
-            rmdir "${extracted_dir}"
+            # Ekstrak ZIP
+            echo -e "${INFO} Extracting ${zip_file} to ${target_dir}..."
+            unzip -q "${zip_file}" -d "${target_dir}"
+
+            # Pindahkan direktori hasil ekstraksi
+            extracted_dir="${target_dir}/${repo}-${branch}"
+            if [[ -d "${extracted_dir}" ]]; then
+                echo -e "${INFO} Moving extracted directory to ${target_dir}..."
+                mv "${extracted_dir}"/* "${target_dir}/"
+            else
+                error_msg "Extracted directory not found. Expected: ${extracted_dir}"
+            fi
+
+            # Hapus file ZIP
+            echo -e "${INFO} Removing ZIP file: ${zip_file}"
+            rm -f "${zip_file}"
+            rm -rf "${2}/${repo}-${branch}"
+
+            echo -e "${SUCCESS} Download and extraction complete. Directory created at: ${target_dir}"
         else
-            error_msg "Extracted directory not found. Expected: ${extracted_dir}"
+            error_msg "ZIP file not downloaded successfully."
         fi
-
-        echo -e "${INFO} Removing ZIP file: ${zip_file}"
-        rm -f "${zip_file}"
-        
-        echo -e "${SUCCESS} Download and extraction complete. Directory created at: ${target_dir}"
     else
         error_msg "Invalid format. Usage: dl_zip_gh \"githubuser/repo:branch\" \"path to extract\""
     fi
 }
 
-
 # Downloading OpenWrt ImageBuilder
 download_imagebuilder() {
-    cd "${make_path}" || error_msg "Failed to change directory to ${make_path}"
+    cd ${make_path}
     echo -e "${STEPS} Start downloading OpenWrt files..."
 
-    case "${op_target}" in
+    
+        case "${op_target}" in
         amlogic|AMLOGIC)
             op_target="amlogic"
             target_profile=""
@@ -235,9 +272,9 @@ download_imagebuilder() {
             error_msg "Unsupported target: ${op_target}"
             ;;
     esac
-	
-    local file_ext=""
-    if echo "$op_branch" | grep -q "^24\."; then
+
+    # Deteksi ekstensi file dan perintah ekstrak berdasarkan versi OpenWrt
+if echo "$op_branch" | grep -q "^24\."; then
     FILE_EXT="tar.zst"
     TAR_CMD="tar --zstd -xvf"
 elif echo "$op_branch" | grep -q "^23\."; then
@@ -264,16 +301,16 @@ mv -f *-imagebuilder-* "${openwrt_dir}"
 sync && sleep 3
 echo -e "${INFO} [ ${make_path} ] directory status: $(ls -al 2>/dev/null)"
 }
+
 # Adjust related files in the ImageBuilder directory
 adjust_settings() {
-    cd "${imagebuilder_path}" || error_msg "Failed to change directory to ${imagebuilder_path}"
+    cd ${imagebuilder_path}
     echo -e "${STEPS} Start adjusting .config file settings..."
 
-    local DTM=$(date '+%d-%m-%Y')
-    
-    if [ -f "${custom_files_path}/etc/uci-defaults/99-first-setup" ]; then
-        sed -i "s|Ouc3kNF6|$DTM|g" "${custom_files_path}/etc/uci-defaults/99-first-setup"
-    fi
+    DTM=$(date '+%d-%m-%Y')
+    CURVER=$(echo $op_branch | awk -F. '{print $1"."$2}')
+
+    sed -i "s|Ouc3kNF6|$DTM|g" "${custom_files_path}/etc/uci-defaults/99-first-setup"
 
     if [[ -s "repositories.conf" ]]; then
         sed -i '\|option check_signature| s|^|#|' repositories.conf
@@ -283,7 +320,10 @@ adjust_settings() {
         sed -i "s/install \$(BUILD_PACKAGES)/install \$(BUILD_PACKAGES) --force-overwrite --force-downgrade/" Makefile
     fi
 
+    # For .config file
     if [[ -s ".config" ]]; then
+
+        # Resize Boot and Rootfs partition size
         sed -i "s/CONFIG_TARGET_KERNEL_PARTSIZE=.*/CONFIG_TARGET_KERNEL_PARTSIZE=128/" .config
         sed -i "s/CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=1024/" .config
 
@@ -295,7 +335,9 @@ adjust_settings() {
         fi
 
         if [ "$ARCH_2" == "x86_64" ]; then
+            # Not generate ISO images for it is too big
             sed -i "s/CONFIG_ISO_IMAGES=y/# CONFIG_ISO_IMAGES is not set/" .config
+            # Not generate VHDX images
             sed -i "s/CONFIG_VHDX_IMAGES=y/# CONFIG_VHDX_IMAGES is not set/" .config
         fi
     else
@@ -308,55 +350,38 @@ adjust_settings() {
 }
 
 # Add custom packages
+# If there is a custom package or ipk you would prefer to use create a [ packages ] directory,
+# If one does not exist and place your custom ipk within this directory.
 custom_packages() {
-    cd "${imagebuilder_path}" || error_msg "Failed to change directory to ${imagebuilder_path}"
+    cd ${imagebuilder_path}
     echo -e "${STEPS} Start adding custom packages..."
 
+    # Create a [ packages ] directory
     [[ -d "packages" ]] || mkdir -p packages
     if [[ -d "${custom_packages_path}" ]]; then
-        cp -rf "${custom_packages_path}"/* packages
+        # Copy custom packages
+        cp -rf ${custom_packages_path}/* packages
         echo -e "${INFO} [ packages ] directory status: $(ls packages -al 2>/dev/null)"
     else
         echo -e "${WARNING} No customized Packages were added."
     fi
 
-    cd packages || error_msg "Failed to change directory to ${imagebuilder_path}/packages"
+    cd packages
 
-    declare -a github_packages
-    declare -a other_packages
-
-        # Download IPK From Github
+    # Download IPK From Github
     # Download luci-app-amlogic
     if [ "$op_target" == "amlogic" ]; then
         echo "Adding [luci-app-amlogic] from bulider script type."
-        github_packages+=("luci-app-amlogic|https://api.github.com/repos/ophub/luci-app-amlogic/releases")
+        github_packages+=("luci-app-amlogic|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest")
     fi
     github_packages+=(
         "luci-app-netmonitor|https://api.github.com/repos/rtaserver/rta-packages/releases"
         "luci-app-base64|https://api.github.com/repos/rtaserver/rta-packages/releases"
     )
+    download_packages "github" github_packages[@]
 
-    case "$TUNNEL_OPTION" in
-        "openclash"|"openclash-passwall"|"nikki-openclash"|"all-tunnel")
-            github_packages+=("luci-app-openclash|https://api.github.com/repos/tes-rep/OpenClash/releases")
-            ;;
-    esac
-
-    case "$TUNNEL_OPTION" in
-        "passwall"|"openclash-passwall"|"nikki-passwall"|"all-tunnel")
-            github_packages+=("luci-app-passwall|https://api.github.com/repos/xiaorouji/openwrt-passwall/releases")
-            ;;
-    esac
-
-    case "$TUNNEL_OPTION" in
-        "nikki"|"nikki-passwall"|"nikki-openclash"|"all-tunnel")
-            # Nikki
-            other_packages+=("nikki|https://api.github.com/repos/rizkikotet-dev/OpenWrt-nikki-Mod/releases")
-            other_packages+=("luci-app-nikki|https://api.github.com/repos/rizkikotet-dev/OpenWrt-nikki-Mod/releases")
-            ;;
-    esac
-    
-    local CURVER=$(echo "$op_branch" | awk -F. '{print $1"."$2}')
+    # Download IPK From Custom
+    CURVER=$(echo "$op_branch" | awk -F. '{print $1"."$2}')
     other_packages+=(    
         "luci-app-internet-detector|https://dl.openwrt.ai/packages-${CURVER}/$ARCH_3/kiddin9"
         "internet-detector-mod-modem-restart|https://dl.openwrt.ai/packages-${CURVER}/$ARCH_3/kiddin9"
@@ -385,40 +410,79 @@ custom_packages() {
         "luci-app-eqosplus|https://dl.openwrt.ai/packages-${CURVER}/$ARCH_3/kiddin9"
         "luci-app-tinyfilemanager|https://dl.openwrt.ai/packages-${CURVER}/$ARCH_3/kiddin9"
     )
-    
-    download_packages "github" github_packages[@]
     download_packages "custom" other_packages[@]
-    
-    # Download core OpenClash
-    if [[ "$TUNNEL_OPTION" == *"openclash"* ]]; then
-        echo -e "${STEPS} Start Clash Core Download !"
-        core_dir="${custom_files_path}/etc/openclash/core"
-        mkdir -p "${core_dir}"
 
-        if [[ "$ARCH_3" == "x86_64" ]]; then
-            clash_meta_file="mihomo-linux-amd64-compatible-alpha-smart"
-        else
-            clash_meta_file="mihomo-linux-arm64-alpha-smart"
-        fi
-        
-        clash_meta_url=$(curl -s "https://api.github.com/repos/vernesong/mihomo/releases" | jq -r '.[0].assets[] | select(.name | contains("'"$clash_meta_file"'")) | .browser_download_url' | head -n 1)
+    # OpenClash
+    openclash_api="https://api.github.com/repos/tes-rep/OpenClash/releases"
+    openclash_file_ipk="luci-app-openclash"
+    openclash_file_ipk_down="$(curl -s ${openclash_api} | grep "browser_download_url" | grep -oE "https.*${openclash_file_ipk}.*.ipk" | head -n 1)"
 
-        if [ -n "$clash_meta_url" ]; then
-            echo -e "${INFO} Downloading OpenClash core from ${clash_meta_url}"
-            if curl -fsSL -o "${core_dir}/clash_meta.gz" "${clash_meta_url}" --max-time 60 --retry 3; then
-                gzip -d "${core_dir}/clash_meta.gz"
-                echo -e "${SUCCESS} OpenClash core downloaded and extracted successfully."
-            else
-                error_msg "Failed to download OpenClash core."
-            fi
-        else
-            error_msg "Failed to find OpenClash core download URL."
-        fi
+    echo -e "${STEPS} Start Clash Core Download !"
+    core_dir="${custom_files_path}/etc/openclash/core"
+    mkdir -p $core_dir
+    if [[ "$ARCH_3" == "x86_64" ]]; then
+        clash_meta="$(meta_api="https://api.github.com/repos/vernesong/mihomo/releases" && meta_file="mihomo-linux-$ARCH_1-compatible-alpha-smart" && curl -s ${meta_api} | grep "browser_download_url" | grep -oE "https.*${meta_file}-[a-z0-9]+\.gz" | head -n 1)"
+    else
+        clash_meta="$(meta_api="https://api.github.com/repos/vernesong/mihomo/releases" && meta_file="mihomo-linux-$ARCH_1-alpha-smart" && curl -s ${meta_api} | grep "browser_download_url" | grep -oE "https.*${meta_file}-[a-z0-9]+\.gz" | head -n 1)"
     fi
 
-    echo -e "${INFO} Final packages in imagebuilder/packages:"
-    ls -lh "${imagebuilder_path}/packages/"
-    
+    # Mihomo
+   # mihomo_api="https://api.github.com/repos/rizkikotet-dev/OpenWrt-mihomo-Mod/releases/latest"
+  #  mihomo_file_ipk="mihomo_${ARCH_3}-openwrt-24.10" #$op_branch | cut -d '.' -f 1-2
+   # mihomo_file_ipk_down="$(curl -s ${mihomo_api} | grep "browser_download_url" | grep -oE "https.*${mihomo_file_ipk}.*.tar.gz" | head -n 1)"
+
+    #passwall
+    passwall_api="https://api.github.com/repos/xiaorouji/openwrt-passwall/releases"
+    passwall_file_ipk="luci-23.05_luci-app-passwall"
+    passwall_file_zip="passwall_packages_ipk_${ARCH_3}"
+    passwall_file_ipk_down="$(curl -s ${passwall_api} | grep "browser_download_url" | grep -oE "https.*${passwall_file_ipk}.*.ipk" | head -n 1)"
+    passwall_file_zip_down="$(curl -s ${passwall_api} | grep "browser_download_url" | grep -oE "https.*${passwall_file_zip}.*.zip" | head -n 1)"
+
+    #Nikki URL generation
+     nikki_file_ipk="nikki_${ARCH_3}-openwrt-24.10"
+     nikki_file_ipk_down=$(curl -s "https://api.github.com/repos/rizkikotet-dev/OpenWrt-nikki-Mod/releases" | grep "browser_download_url" | grep -oE "https.*${nikki_file_ipk}.*.tar.gz" | head -n 1)
+
+    # Output download information
+    echo -e "${STEPS} Installing OpenClash , Mihomo And Passwall"
+
+    echo -e "${INFO} Downloading OpenClash package"
+    curl -fsSOL ${openclash_file_ipk_down}
+    if [ "$?" -ne 0 ]; then
+        error_msg "Error: Failed to download OpenClash package."
+    fi
+    curl -fsSL -o "${core_dir}/clash_meta.gz" "${clash_meta}"
+    gzip -d $core_dir/clash_meta.gz
+    if [ "$?" -ne 0 ]; then
+        error_msg "Error: Failed to extract OpenClash package."
+    fi
+    echo -e "${INFO} OpenClash Packages downloaded successfully."
+
+    echo -e "${INFO} Downloading Passwall package"
+    curl -fsSOL ${passwall_file_ipk_down}
+    if [ "$?" -ne 0 ]; then
+        error_msg "Error: Failed to download Passwall package."
+    fi
+    curl -fsSOL ${passwall_file_zip_down}
+    if [ "$?" -ne 0 ]; then
+        error_msg "Error: Failed to download Passwall Zip package."
+    fi
+    unzip -q "passwall_packages_ipk_${ARCH_3}.zip" && rm "passwall_packages_ipk_${ARCH_3}.zip"
+    if [ "$?" -ne 0 ]; then
+        error_msg "Error: Failed to extract Passwall package."
+    fi
+    echo -e "${INFO} Passwall Packages downloaded successfully."
+
+    echo -e "${INFO} Downloading nikki package"
+    curl -fsSOL ${nikki_file_ipk_down}
+    if [ "$?" -ne 0 ]; then
+        error_msg "Error: Failed to download Mihomo package."
+    fi
+    tar -xzvf "nikki_${ARCH_3}-openwrt-24.10.tar.gz" && rm "nikki_${ARCH_3}-openwrt-24.10.tar.gz"
+    if [ "$?" -ne 0 ]; then
+        error_msg "Error: Failed to extract Mihomo package."
+    fi
+    echo -e "${INFO} nikki Packages downloaded successfully."
+
     echo -e "${SUCCESS} Download and extraction All complete."
     sync && sleep 3
     echo -e "${INFO} [ packages ] directory status: $(ls -al 2>/dev/null)"
@@ -427,10 +491,10 @@ custom_packages() {
 
 # Add custom packages, lib, theme, app and i18n, etc.
 custom_config() {
-    cd "${imagebuilder_path}" || error_msg "Failed to change directory to ${imagebuilder_path}"
+    cd ${imagebuilder_path}
     echo -e "${STEPS} Start adding custom config..."
 
-    echo -e "${INFO} Downloading custom script"
+    echo -e "${INFO} Downloading custom script" 
     sync_time="https://raw.githubusercontent.com/frizkyiman/auto-sync-time/main/sbin/sync_time.sh"
     clock="https://raw.githubusercontent.com/frizkyiman/auto-sync-time/main/usr/bin/clock"
     repair_ro="https://raw.githubusercontent.com/frizkyiman/fix-read-only/main/install2.sh"
@@ -439,19 +503,22 @@ custom_config() {
     curl -fsSL -o "${custom_files_path}/sbin/sync_time.sh" "${sync_time}"
     curl -fsSL -o "${custom_files_path}/usr/bin/clock" "${clock}"
     curl -fsSL -o "${custom_files_path}/root/install2.sh" "${repair_ro}"
-    # curl -fsSL -o "${custom_files_path}/usr/bin/mount_hdd" "${mount_hdd}"
+    #curl -fsSL -o "${custom_files_path}/usr/bin/mount_hdd" "${mount_hdd}"
 
     echo -e "${INFO} All custom configuration setup completed!"
 }
 
 # Add custom files
+# The FILES variable allows custom configuration files to be included in images built with Image Builder.
+# The [ files ] directory should be placed in the Image Builder root directory where you issue the make command.
 custom_files() {
-    cd "${imagebuilder_path}" || error_msg "Failed to change directory to ${imagebuilder_path}"
+    cd ${imagebuilder_path}
     echo -e "${STEPS} Start adding custom files..."
 
     if [[ -d "${custom_files_path}" ]]; then
+        # Copy custom files
         [[ -d "files" ]] || mkdir -p files
-        cp -rf "${custom_files_path}"/* files || error_msg "Failed to copy custom files."
+        cp -rf ${custom_files_path}/* files
 
         sync && sleep 3
         echo -e "${INFO} [ files ] directory status: $(ls files -al 2>/dev/null)"
@@ -459,11 +526,10 @@ custom_files() {
         echo -e "${WARNING} No customized files were added."
     fi
 }
-
 # Tambahan paket Tunnel
-OPENCLASH="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
-NIKKI="nikki luci-app-nikki"
-PASSWALL="chinadns-ng dns2socks dns2tcp geoview hysteria ipt2socks microsocks naiveproxy simple-obfs sing-box tcping trojan-plus tuic-client v2ray-core v2ray-plugin xray-core xray-plugin v2ray-geoip v2ray-geosite luci-app-passwall"
+OPENCLASH+="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
+NIKKI+="nikki luci-app-nikki"
+PASSWALL+="chinadns-ng dns2socks dns2tcp geoview hysteria ipt2socks microsocks naiveproxy simple-obfs sing-box tcping trojan-plus tuic-client v2ray-core v2ray-plugin xray-core xray-plugin v2ray-geoip v2ray-geosite luci-app-passwall"
 
 # Fungsi memilih paket tunnel
 handle_tunnel_option() {
@@ -490,67 +556,105 @@ handle_tunnel_option() {
             PACKAGES+=" $OPENCLASH $PASSWALL $NIKKI"
             ;;
     esac
-}
+}   
 
 # Rebuild OpenWrt firmware
 rebuild_firmware() {
-    cd "${imagebuilder_path}" || error_msg "Failed to change directory to ${imagebuilder_path}"
+    cd ${imagebuilder_path}
     echo -e "${STEPS} Start building OpenWrt with Image Builder..."
 
-    # Default packages
-    PACKAGES="file lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 -kmod-usb-net-asix -kmod-usb-net-asix-ax88179 kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-net-qmi-wwan uqmi kmod-usb3 kmod-usb-net-cdc-ether kmod-usb-serial-option kmod-usb-serial kmod-usb-serial-wwan qmi-utils kmod-usb-serial-qualcomm kmod-usb-acm kmod-usb-net-cdc-ncm kmod-usb-net-cdc-mbim umbim modemmanager modemmanager-rpcd luci-proto-modemmanager libmbim libqmi usbutils luci-proto-mbim luci-proto-ncm kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial-sierrawireless kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-utils libimobiledevice-utils usb-modeswitch kmod-nls-utf8 mbim-utils xmm-modem kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty luci-app-base64 perl perlbase-essential perlbase-cpan perlbase-utf8 perlbase-time perlbase-xsloader perlbase-extutils perlbase-cpan coreutils-base64"
-    
-    PACKAGES+=" tailscale luci-app-tailscale luci-app-droidnet luci-app-ipinfo luci-theme-initials luci-theme-argon luci-app-argon-config luci-theme-hj jq"
-    
+    # Selecting default packages, lib, theme, app and i18n, etc.
+    PACKAGES+=" file lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 -kmod-usb-net-asix -kmod-usb-net-asix-ax88179"
+    PACKAGES+=" kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-net-qmi-wwan uqmi kmod-usb3 \
+    kmod-usb-net-cdc-ether kmod-usb-serial-option kmod-usb-serial kmod-usb-serial-wwan qmi-utils \
+    kmod-usb-serial-qualcomm kmod-usb-acm kmod-usb-net-cdc-ncm kmod-usb-net-cdc-mbim umbim \
+    modemmanager modemmanager-rpcd luci-proto-modemmanager libmbim libqmi usbutils luci-proto-mbim luci-proto-ncm \
+    kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial-sierrawireless \
+    kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-utils libimobiledevice-utils usb-modeswitch kmod-nls-utf8 mbim-utils xmm-modem \
+    kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty"
+    PACKAGES+=" luci-app-base64 perl perlbase-essential perlbase-cpan perlbase-utf8 perlbase-time perlbase-xsloader perlbase-extutils perlbase-cpan coreutils-base64"
+
+    # Modem Tools
+    #PACKAGES+=" modeminfo luci-app-modeminfo atinout modemband luci-app-modemband sms-tool luci-app-sms-tool-js luci-app-lite-watchdog luci-app-3ginfo-lite picocom minicom"
+
+
+    # Remote Services
+    PACKAGES+=" tailscale luci-app-tailscale  luci-app-droidnet luci-app-ipinfo luci-theme-initials luci-theme-argon luci-app-argon-config luci-theme-hj jq"
+
+    # NAS and Hard disk tools
     PACKAGES+=" luci-app-diskman smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
-    
+
+    # Docker
+    #PACKAGES+=" docker docker-compose dockerd luci-app-dockerman"
+
+    # Bandwidth And Network Monitoring
     PACKAGES+=" internet-detector luci-app-internet-detector internet-detector-mod-modem-restart vnstat2 vnstati2 netdata luci-app-netmonitor"
-    
+
+    # Material Theme
     PACKAGES+=" luci-theme-material"
-    
+
+    # PHP8
     PACKAGES+=" php8 php8-fastcgi php8-fpm php8-mod-session php8-mod-ctype php8-mod-fileinfo php8-mod-zip php8-mod-iconv php8-mod-mbstring"
-    
-    local misc=""
-    if [ "$op_target" == "amlogic" ]; then
-        misc+=" luci-app-amlogic ath9k-htc-firmware btrfs-progs hostapd hostapd-utils kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc kmod-cfg80211 kmod-crypto-acompress kmod-crypto-crc32c kmod-crypto-hash kmod-fs-btrfs kmod-mac80211 wireless-tools wpa-cli wpa-supplicant"
-    elif [ "$op_target" == "rpi-4" ]; then
+
+
+    # Misc and some custom .ipk files
+    misc=""
+    if [ "$op_target" == "openwrt" ]; then
+        misc+=" "
+    fi
+
+    if [ "$op_target" == "rpi-4" ]; then
         misc+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio luci-app-oled"
     elif [ "$ARCH_2" == "x86_64" ]; then
         misc+=" kmod-iwlwifi iw-full pciutils"
     fi
 
+    if [ "$op_target" == "amlogic" ]; then
+        PACKAGES+=" luci-app-amlogic ath9k-htc-firmware btrfs-progs hostapd hostapd-utils kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc kmod-cfg80211 kmod-crypto-acompress kmod-crypto-crc32c kmod-crypto-hash kmod-fs-btrfs kmod-mac80211 wireless-tools wpa-cli wpa-supplicant"
+        EXCLUDED+=" "
+    fi
+
     PACKAGES+=" $misc zram-swap adb parted losetup resize2fs luci luci-ssl block-mount luci-app-ramfree htop bash curl wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
 
-    local EXCLUDED="-libgd"
-    if echo "$op_branch" | grep -q "^24\."; then
-        EXCLUDED+=" -dnsmasq" # Sesuai immortalwrt
-    else
-        EXCLUDED+=" -dnsmasq"
-    fi
+    # Exclude package (must use - before packages name)
+EXCLUDED+=" -libgd"
 
-    if [ "${op_sourse}" == "immortalwrt" ]; then
-        EXCLUDED+=" -automount -libustream-openssl -default-settings-chn -luci-i18n-base-zh-cn"
-        if [ "$ARCH_2" == "x86_64" ]; then
-            EXCLUDED+=" -kmod-usb-net-rtl8152-vendor"
-        fi
-    fi
+# Jika kernel dari GitHub Actions adalah 5.4
+if echo "$OPENWRT_KERNEL" | grep -q "5.4"; then
+    echo "[INFO] Detected kernel 5.4, excluding procd-ujail"
+    EXCLUDED+=" -procd-ujail"
+fi
 
-    if [ -n "$TUNNEL_OPTION" ]; then
-        echo "[INFO] Menambahkan paket tunnel: $TUNNEL_OPTION"
-        handle_tunnel_option "$TUNNEL_OPTION"
-    fi
 
-    make clean
-    make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files"
-    if [ $? -ne 0 ]; then
-        error_msg "OpenWrt build failed. Check logs for details."
-    else
-        sync && sleep 3
-        echo -e "${INFO} [ ${openwrt_dir}/bin/targets/*/* ] directory status: $(ls bin/targets/*/* -al 2>/dev/null)"
-        echo -e "${SUCCESS} The rebuild is successful, the current path: [ ${PWD} ]"
+# Tambahan berdasarkan source
+if [ "${op_sourse}" == "openwrt" ]; then
+    EXCLUDED+=" -dnsmasq"
+elif [ "${op_sourse}" == "immortalwrt" ]; then
+    EXCLUDED+=" -dnsmasq -automount -libustream-openssl -default-settings-chn -luci-i18n-base-zh-cn"
+
+    # Tambahan untuk x86_64
+    if [ "$ARCH_2" == "x86_64" ]; then
+        EXCLUDED+=" -kmod-usb-net-rtl8152-vendor"
     fi
+fi
+
+# Tambah paket tunnel jika ada pilihan
+if [ -n "$TUNNEL_OPTION" ]; then
+    echo "[INFO] Menambahkan paket tunnel: $TUNNEL_OPTION"
+    handle_tunnel_option "$TUNNEL_OPTION"
+fi
+# Rebuild firmware
+make clean
+make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files"
+if [ $? -ne 0 ]; then
+    error_msg "OpenWrt build failed. Check logs for details."
+else
+    sync && sleep 3
+    echo -e "${INFO} [ ${openwrt_dir}/bin/targets/*/* ] directory status: $(ls bin/targets/*/* -al 2>/dev/null)"
+    echo -e "${SUCCESS} The rebuild is successful, the current path: [ ${PWD} ]"
+fi
+
 }
-
 # Show welcome message
 echo -e "${STEPS} Welcome to Rebuild OpenWrt Using the Image Builder."
 [[ -x "${0}" ]] || error_msg "Please give the script permission to run: [ chmod +x ${0} ]"
@@ -558,16 +662,14 @@ echo -e "${STEPS} Welcome to Rebuild OpenWrt Using the Image Builder."
 [[ -z "${2}" ]] && error_msg "Please specify the OpenWrt Target, such as [ ${0} openwrt:22.03.3 x86-64 ]"
 [[ "${1}" =~ ^[a-z]{3,}:[0-9]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:22.03.3 x86-64 or openwrt:22.03.3 amlogic"
 [[ "${2}" =~ ^[a-zA-Z0-9_-]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:22.03.3 x86-64 or openwrt:22.03.3 amlogic"
-
 op_sourse="${1%:*}"
 op_branch="${1#*:}"
 op_target="${2}"
-TUNNEL_OPTION="${3}"
-
+TUNNEL_OPTION="${3}"   # Argumen ketiga untuk opsi tunnel
 echo -e "${INFO} Rebuild path: [ ${PWD} ]"
 echo -e "${INFO} Rebuild Source: [ ${op_sourse} ], Branch: [ ${op_branch} ], Target: ${op_target}"
-echo -e "${INFO} Server space usage before starting to compile: \n$(df -hT "${make_path}") \n"
-
+echo -e "${INFO} Server space usage before starting to compile: \n$(df -hT ${make_path}) \n"
+#
 # Perform related operations
 download_imagebuilder
 adjust_settings
@@ -575,8 +677,8 @@ custom_packages
 custom_config
 custom_files
 rebuild_firmware
-
+#
 # Show server end information
-echo -e "Server space usage after compilation: \n$(df -hT "${make_path}") \n"
+echo -e "Server space usage after compilation: \n$(df -hT ${make_path}) \n"
 # All process completed
 wait
