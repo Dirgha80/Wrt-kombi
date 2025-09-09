@@ -325,9 +325,16 @@ custom_packages() {
     declare -a github_packages
     declare -a other_packages
 
+        # Download IPK From Github
+    # Download luci-app-amlogic
     if [ "$op_target" == "amlogic" ]; then
+        echo "Adding [luci-app-amlogic] from bulider script type."
         github_packages+=("luci-app-amlogic|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest")
     fi
+    github_packages+=(
+        "luci-app-netmonitor|https://api.github.com/repos/rtaserver/rta-packages/releases"
+        "luci-app-base64|https://api.github.com/repos/rtaserver/rta-packages/releases"
+    )
 
     case "$TUNNEL_OPTION" in
         "openclash"|"openclash-passwall"|"nikki-openclash"|"all-tunnel")
