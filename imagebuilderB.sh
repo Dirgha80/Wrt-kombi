@@ -14,21 +14,18 @@
 # ================================================================================================
 
 # --- Variabel Global dan Konfigurasi Awal ---
-# Lokasi direktori
 make_path="${PWD}"
 openwrt_dir="imagebuilder"
 imagebuilder_path="${make_path}/${openwrt_dir}"
 custom_files_path="${make_path}/files"
 custom_packages_path="${make_path}/packages"
 
-# Kode warna untuk pesan
 STEPS="[\033[95m STEPS \033[0m]"
 INFO="[\033[94m INFO \033[0m]"
 SUCCESS="[\033[92m SUCCESS \033[0m]"
 WARNING="[\033[93m WARNING \033[0m]"
 ERROR="[\033[91m ERROR \033[0m]"
 
-# Paket Tunnel
 declare -A TUNNEL_PACKAGES=(
     ["openclash"]="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
     ["passwall"]="chinadns-ng dns2socks dns2tcp geoview hysteria ipt2socks microsocks naiveproxy simple-obfs sing-box tcping trojan-plus tuic-client v2ray-core v2ray-plugin xray-core xray-plugin v2ray-geoip v2ray-geosite luci-app-passwall"
@@ -36,16 +33,14 @@ declare -A TUNNEL_PACKAGES=(
 )
 
 # --- Fungsi Utility ---
-# Fungsi untuk menangani error dan keluar dari skrip
 error_msg() {
     echo -e "${ERROR} ${1}" >&2
     exit 1
 }
 
-# Fungsi untuk mengunduh paket eksternal (dari GitHub atau sumber kustom)
 download_packages() {
     local source=$1
-    local package_list=("${!2}") # Capture array argument
+    local package_list=("${!2}")
     
     for entry in "${package_list[@]}"; do
         IFS="|" read -r package_name base_url <<< "$entry"
@@ -55,7 +50,6 @@ download_packages() {
         if [[ "${source}" == "github" ]]; then
             file_url=$(curl -s "${base_url}" | grep "browser_download_url" | grep -oE "https.*/${package_name}_[_0-9a-zA-Z\._~-]*\.ipk" | sort -V | tail -n 1)
         elif [[ "${source}" == "custom" ]]; then
-            # Mencari URL file dengan beberapa pola
             local search_patterns=("\"${package_name}[^\"]*\.ipk\"" "\"${package_name}[^\"]*\.apk\"" "${package_name}_.*\.ipk" "${package_name}_.*\.apk" "${package_name}.*\.ipk" "${package_name}.*\.apk")
             for pattern in "${search_patterns[@]}"; do
                 file_url=$(curl -sL "$base_url" | grep -oE "$pattern" | sed 's/"//g' | sort -V | tail -n 1)
@@ -95,7 +89,6 @@ download_packages() {
     done
 }
 
-# Fungsi untuk mengunduh dan mengekstrak ZIP dari GitHub
 dl_zip_gh() {
     local repo_and_branch="${1}"
     local extract_path="${2}"
@@ -122,17 +115,11 @@ dl_zip_gh() {
     
     echo -e "${SUCCESS} Unduhan dan ekstraksi selesai. Direktori: ${target_dir}"
 }
----
-## 1. Mengunduh OpenWrt ImageBuilder
 
-**Fungsi:** `download_imagebuilder()`
-**Deskripsi:** Mengunduh OpenWrt Image Builder yang sesuai dengan target dan versi yang ditentukan. Skrip ini secara otomatis mendeteksi arsitektur dan mengunduh file yang benar.
-
-```bash
+# 1. Mengunduh OpenWrt ImageBuilder
 download_imagebuilder() {
     echo -e "${STEPS} Memulai unduhan OpenWrt Image Builder..."
 
-    # Menentukan parameter berdasarkan target
     case "${op_target}" in
         amlogic|AMLOGIC)
             target_profile=""
@@ -193,7 +180,6 @@ download_imagebuilder() {
             ;;
     esac
 
-    # Menentukan ekstensi file dan perintah ekstrak berdasarkan versi OpenWrt
     local file_ext
     local tar_cmd
     case "${op_branch}" in
@@ -210,15 +196,12 @@ download_imagebuilder() {
             ;;
     esac
 
-    # Nama file & URL imagebuilder
     local download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${file_ext}"
     local imagebuilder_file="$(basename "${download_file}")"
 
-    # Unduh dan ekstrak
     curl -fsSOL "${download_file}" || error_msg "Gagal mengunduh: ${download_file}"
     echo -e "${SUCCESS} Berhasil mengunduh Image Builder dasar."
 
-    # Periksa dan ekstrak
     if [ ! -f "${imagebuilder_file}" ]; then
         error_msg "File Image Builder tidak ditemukan setelah diunduh."
     fi
@@ -228,13 +211,8 @@ download_imagebuilder() {
     echo -e "${SUCCESS} Image Builder berhasil diekstrak ke ${openwrt_dir}"
     cd "${imagebuilder_path}" || error_msg "Gagal masuk ke direktori Image Builder."
 }
----
-## 2. Menyesuaikan Pengaturan
 
-**Fungsi:** `adjust_settings()`
-**Deskripsi:** Mengubah file konfigurasi default dalam Image Builder, seperti ukuran partisi dan pengaturan repositori.
-
-```bash
+# 2. Menyesuaikan Pengaturan
 adjust_settings() {
     echo -e "${STEPS} Menyesuaikan file konfigurasi Image Builder..."
 
@@ -243,11 +221,9 @@ adjust_settings() {
         error_msg "File .config tidak ditemukan di direktori Image Builder."
     fi
 
-    # Menyesuaikan ukuran partisi
     sed -i "s/CONFIG_TARGET_KERNEL_PARTSIZE=.*/CONFIG_TARGET_KERNEL_PARTSIZE=128/" .config
     sed -i "s/CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=1024/" .config
 
-    # Pengaturan khusus per target
     case "${op_target}" in
         amlogic|AMLOGIC)
             sed -i "/CONFIG_TARGET_ROOTFS_CPIOGZ/d; /CONFIG_TARGET_ROOTFS_EXT4FS/d; /CONFIG_TARGET_ROOTFS_SQUASHFS/d; /CONFIG_TARGET_IMAGES_GZIP/d" .config
@@ -258,32 +234,24 @@ adjust_settings() {
             ;;
     esac
     
-    # Nonaktifkan verifikasi signature di repositories.conf jika ada
     if [[ -s "repositories.conf" ]]; then
         sed -i 's|option check_signature|# option check_signature|' repositories.conf
     fi
     
-    # Memaksa overwrite paket
     if [[ -s "Makefile" ]]; then
         sed -i "s/install \$(BUILD_PACKAGES)/install \$(BUILD_PACKAGES) --force-overwrite --force-downgrade/" Makefile
     fi
 
     echo -e "${SUCCESS} Penyesuaian konfigurasi selesai."
 }
----
-## 3. Menambahkan Paket Kustom
 
-**Fungsi:** `custom_packages()`
-**Deskripsi:** Mengunduh dan menyiapkan paket kustom dari berbagai sumber (GitHub, URL langsung, dll.) dan menyalinnya ke direktori Image Builder.
-
-```bash
+# 3. Menambahkan Paket Kustom
 custom_packages() {
     echo -e "${STEPS} Menambahkan paket kustom..."
 
     cd "${imagebuilder_path}"
     mkdir -p packages
 
-    # Menyalin paket lokal dari direktori kustom
     if [[ -d "${custom_packages_path}" ]]; then
         cp -rf "${custom_packages_path}"/* packages/
         echo -e "${INFO} Paket kustom dari direktori 'packages' ditambahkan."
@@ -291,20 +259,18 @@ custom_packages() {
 
     cd packages
 
-    # Paket GitHub
     local github_packages=()
     if [ "${op_target}" == "amlogic" ]; then
-        github_packages+=("luci-app-amlogic|[https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest](https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest)")
+        github_packages+=("luci-app-amlogic|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest")
     fi
-    github_packages+=("luci-app-netmonitor|[https://api.github.com/repos/rtaserver/rta-packages/releases](https://api.github.com/repos/rtaserver/rta-packages/releases)" "luci-app-base64|[https://api.github.com/repos/rtaserver/rta-packages/releases](https://api.github.com/repos/rtaserver/rta-packages/releases)")
+    github_packages+=("luci-app-netmonitor|https://api.github.com/repos/rtaserver/rta-packages/releases" "luci-app-base64|https://api.github.com/repos/rtaserver/rta-packages/releases")
     download_packages "github" github_packages[@]
 
-    # Paket Kustom
     local cur_ver=$(echo "${op_branch}" | awk -F. '{print $1"."$2}')
     local other_packages=(
-        "luci-app-internet-detector|[https://dl.openwrt.ai/packages-$](https://dl.openwrt.ai/packages-$){cur_ver}/${ARCH_3}/kiddin9"
-        "internet-detector-mod-modem-restart|[https://dl.openwrt.ai/packages-$](https://dl.openwrt.ai/packages-$){cur_ver}/${ARCH_3}/kiddin9"
-        "internet-detector|[https://dl.openwrt.ai/packages-$](https://dl.openwrt.ai/packages-$){cur_ver}/${ARCH_3}/kiddin9"
+        "luci-app-internet-detector|https://dl.openwrt.ai/packages-${cur_ver}/${ARCH_3}/kiddin9"
+        "internet-detector-mod-modem-restart|https://dl.openwrt.ai/packages-${cur_ver}/${ARCH_3}/kiddin9"
+        "internet-detector|https://dl.openwrt.ai/packages-${cur_ver}/${ARCH_3}/kiddin9"
         "modemmanager-rpcd|https://downloads.${op_sourse}.org/releases/${op_branch}/packages/${ARCH_3}/packages"
         "luci-proto-modemmanager|https://downloads.${op_sourse}.org/releases/${op_branch}/packages/${ARCH_3}/luci"
         "libqmi|https://downloads.${op_sourse}.org/releases/${op_branch}/packages/${ARCH_3}/packages"
@@ -312,39 +278,37 @@ custom_packages() {
         "modemmanager|https://downloads.${op_sourse}.org/releases/${op_branch}/packages/${ARCH_3}/packages"
         "sms-tool|https://downloads.${op_sourse}.org/releases/${op_branch}/packages/${ARCH_3}/packages"
         "tailscale|https://downloads.${op_sourse}.org/releases/${op_branch}/packages/${ARCH_3}/packages"
-        "luci-app-modeminfo|[https://dl.openwrt.ai/packages-$](https://dl.openwrt.ai/packages-$){cur_ver}/${ARCH_3}/kiddin9"
-        "luci-app-tailscale|[https://dl.openwrt.ai/packages-$](https://dl.openwrt.ai/packages-$){cur_ver}/${ARCH_3}/kiddin9"
-        "luci-app-diskman|[https://dl.openwrt.ai/packages-$](https://dl.openwrt.ai/packages-$){cur_ver}/${ARCH_3}/kiddin9"
-        "modeminfo|[https://dl.openwrt.ai/packages-$](https://dl.openwrt.ai/packages-$){cur_ver}/${ARCH_3}/kiddin9"
-        "atinout|[https://dl.openwrt.ai/packages-$](https://dl.openwrt.ai/packages-$){cur_ver}/${ARCH_3}/kiddin9"
-        "luci-app-poweroff|[https://dl.openwrt.ai/packages-$](https://dl.openwrt.ai/packages-$){cur_ver}/${ARCH_3}/kiddin9"
-        "xmm-modem|[https://dl.openwrt.ai/packages-$](https://dl.openwrt.ai/packages-$){cur_ver}/${ARCH_3}/kiddin9"
-        "luci-app-disks-info|[https://dl.openwrt.ai/packages-$](https://dl.openwrt.ai/packages-$){cur_ver}/${ARCH_3}/kiddin9"
-        "luci-app-temp-status|[https://dl.openwrt.ai/packages-$](https://dl.openwrt.ai/packages-$){cur_ver}/${ARCH_3}/kiddin9"
-        "luci-app-ramfree|[https://dl.openwrt.ai/packages-$](https://dl.openwrt.ai/packages-$){cur_ver}/${ARCH_3}/kiddin9"
-        "luci-app-3ginfo-lite|[https://downloads.immortalwrt.org/releases/packages-$](https://downloads.immortalwrt.org/releases/packages-$){cur_ver}/${ARCH_3}/luci"
-        "modemband|[https://downloads.immortalwrt.org/releases/$](https://downloads.immortalwrt.org/releases/$){op_branch}/packages/${ARCH_3}/packages"
-        "luci-app-modemband|[https://downloads.immortalwrt.org/releases/$](https://downloads.immortalwrt.org/releases/$){op_branch}/packages/${ARCH_3}/luci"
-        "luci-app-sms-tool-js|[https://downloads.immortalwrt.org/releases/$](https://downloads.immortalwrt.org/releases/$){op_branch}/packages/${ARCH_3}/luci"
-        "luci-app-eqosplus|[https://dl.openwrt.ai/packages-$](https://dl.openwrt.ai/packages-$){cur_ver}/${ARCH_3}/kiddin9"
-        "luci-app-tinyfilemanager|[https://dl.openwrt.ai/packages-$](https://dl.openwrt.ai/packages-$){cur_ver}/${ARCH_3}/kiddin9"
+        "luci-app-modeminfo|https://dl.openwrt.ai/packages-${cur_ver}/${ARCH_3}/kiddin9"
+        "luci-app-tailscale|https://dl.openwrt.ai/packages-${cur_ver}/${ARCH_3}/kiddin9"
+        "luci-app-diskman|https://dl.openwrt.ai/packages-${cur_ver}/${ARCH_3}/kiddin9"
+        "modeminfo|https://dl.openwrt.ai/packages-${cur_ver}/${ARCH_3}/kiddin9"
+        "atinout|https://dl.openwrt.ai/packages-${cur_ver}/${ARCH_3}/kiddin9"
+        "luci-app-poweroff|https://dl.openwrt.ai/packages-${cur_ver}/${ARCH_3}/kiddin9"
+        "xmm-modem|https://dl.openwrt.ai/packages-${cur_ver}/${ARCH_3}/kiddin9"
+        "luci-app-disks-info|https://dl.openwrt.ai/packages-${cur_ver}/${ARCH_3}/kiddin9"
+        "luci-app-temp-status|https://dl.openwrt.ai/packages-${cur_ver}/${ARCH_3}/kiddin9"
+        "luci-app-ramfree|https://dl.openwrt.ai/packages-${cur_ver}/${ARCH_3}/kiddin9"
+        "luci-app-3ginfo-lite|https://downloads.immortalwrt.org/releases/packages-${cur_ver}/${ARCH_3}/luci"
+        "modemband|https://downloads.immortalwrt.org/releases/${op_branch}/packages/${ARCH_3}/packages"
+        "luci-app-modemband|https://downloads.immortalwrt.org/releases/${op_branch}/packages/${ARCH_3}/luci"
+        "luci-app-sms-tool-js|https://downloads.immortalwrt.org/releases/${op_branch}/packages/${ARCH_3}/luci"
+        "luci-app-eqosplus|https://dl.openwrt.ai/packages-${cur_ver}/${ARCH_3}/kiddin9"
+        "luci-app-tinyfilemanager|https://dl.openwrt.ai/packages-${cur_ver}/${ARCH_3}/kiddin9"
     )
     download_packages "custom" other_packages[@]
 
-    # Mengunduh dan menyiapkan paket khusus (OpenClash, Passwall, Nikki)
     echo -e "${STEPS} Mengunduh paket-paket khusus: OpenClash, Passwall, Nikki..."
-    local openclash_url=$(curl -s "[https://api.github.com/repos/tes-rep/OpenClash/releases](https://api.github.com/repos/tes-rep/OpenClash/releases)" | grep "browser_download_url" | grep -oE "https.*luci-app-openclash.*\.ipk" | head -n 1)
-    local passwall_url=$(curl -s "[https://api.github.com/repos/xiaorouji/openwrt-passwall/releases](https://api.github.com/repos/xiaorouji/openwrt-passwall/releases)" | grep "browser_download_url" | grep -oE "https.*luci-23.05_luci-app-passwall.*\.ipk" | head -n 1)
-    local passwall_zip_url=$(curl -s "[https://api.github.com/repos/xiaorouji/openwrt-passwall/releases](https://api.github.com/repos/xiaorouji/openwrt-passwall/releases)" | grep "browser_download_url" | grep -oE "https.*passwall_packages_ipk_${ARCH_3}.*\.zip" | head -n 1)
-    local nikki_url=$(curl -s "[https://api.github.com/repos/rizkikotet-dev/OpenWrt-nikki-Mod/releases](https://api.github.com/repos/rizkikotet-dev/OpenWrt-nikki-Mod/releases)" | grep "browser_download_url" | grep -oE "https.*nikki_${ARCH_3}-openwrt-24.10.*\.tar\.gz" | head -n 1)
+    local openclash_url=$(curl -s "https://api.github.com/repos/tes-rep/OpenClash/releases" | grep "browser_download_url" | grep -oE "https.*luci-app-openclash.*\.ipk" | head -n 1)
+    local passwall_url=$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall/releases" | grep "browser_download_url" | grep -oE "https.*luci-23.05_luci-app-passwall.*\.ipk" | head -n 1)
+    local passwall_zip_url=$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall/releases" | grep "browser_download_url" | grep -oE "https.*passwall_packages_ipk_${ARCH_3}.*\.zip" | head -n 1)
+    local nikki_url=$(curl -s "https://api.github.com/repos/rizkikotet-dev/OpenWrt-nikki-Mod/releases" | grep "browser_download_url" | grep -oE "https.*nikki_${ARCH_3}-openwrt-24.10.*\.tar\.gz" | head -n 1)
     
     [[ -n "${openclash_url}" ]] && curl -fsSOL "${openclash_url}"
     [[ -n "${passwall_url}" ]] && curl -fsSOL "${passwall_url}"
     [[ -n "${passwall_zip_url}" ]] && { curl -fsSOL "${passwall_zip_url}" && unzip -q "$(basename "${passwall_zip_url}")" && rm "$(basename "${passwall_zip_url}")"; }
     [[ -n "${nikki_url}" ]] && { curl -fsSOL "${nikki_url}" && tar -xzvf "$(basename "${nikki_url}")" && rm "$(basename "${nikki_url}")"; }
 
-    # Unduh core OpenClash
-    local clash_meta_api="[https://api.github.com/repos/vernesong/mihomo/releases](https://api.github.com/repos/vernesong/mihomo/releases)"
+    local clash_meta_api="https://api.github.com/repos/vernesong/mihomo/releases"
     local clash_meta_file_pattern="mihomo-linux-arm64-alpha-smart"
     if [ "${ARCH_3}" == "x86_64" ]; then
         clash_meta_file_pattern="mihomo-linux-amd64-compatible-alpha-smart"
@@ -357,20 +321,14 @@ custom_packages() {
 
     echo -e "${SUCCESS} Pengunduhan paket kustom selesai."
 }
----
-## 4. Menambahkan File Kustom
 
-**Fungsi:** `custom_files()`
-**Deskripsi:** Menyalin file konfigurasi dan skrip kustom ke dalam direktori build untuk diikutkan dalam firmware akhir.
-
-```bash
+# 4. Menambahkan File Kustom
 custom_files() {
     echo -e "${STEPS} Menambahkan file kustom..."
 
     cd "${imagebuilder_path}"
     mkdir -p files
     
-    # Salin file lokal
     if [[ -d "${custom_files_path}" ]]; then
         cp -rf "${custom_files_path}"/* files/
         echo -e "${INFO} File kustom dari direktori 'files' ditambahkan."
@@ -378,25 +336,18 @@ custom_files() {
         echo -e "${WARNING} Tidak ada file kustom yang ditambahkan."
     fi
 
-    # Unduh skrip tambahan
     echo -e "${INFO} Mengunduh skrip tambahan..."
     curl -fsSL -o "files/sbin/sync_time.sh" "https://raw.githubusercontent.com/frizkyiman/auto-sync-time/main/sbin/sync_time.sh"
     curl -fsSL -o "files/usr/bin/clock" "https://raw.githubusercontent.com/frizkyiman/auto-sync-time/main/usr/bin/clock"
     curl -fsSL -o "files/root/install2.sh" "https://raw.githubusercontent.com/frizkyiman/fix-read-only/main/install2.sh"
     
-    # Menyesuaikan file
     dtm=$(date '+%d-%m-%Y')
     sed -i "s|Ouc3kNF6|$dtm|g" "files/etc/uci-defaults/99-first-setup"
 
     echo -e "${SUCCESS} Penyiapan file kustom selesai."
 }
----
-## 5. Membangun Firmware OpenWrt
 
-**Fungsi:** `rebuild_firmware()`
-**Deskripsi:** Membangun firmware OpenWrt dengan semua paket, file, dan konfigurasi yang telah ditentukan.
-
-```bash
+# 5. Membangun Firmware OpenWrt
 rebuild_firmware() {
     echo -e "${STEPS} Memulai proses build OpenWrt..."
 
@@ -416,7 +367,6 @@ rebuild_firmware() {
     packages+=" php8 php8-fastcgi php8-fpm php8-mod-session php8-mod-ctype php8-mod-fileinfo php8-mod-zip php8-mod-iconv php8-mod-mbstring"
     packages+=" zram-swap adb parted losetup resize2fs luci luci-ssl block-mount luci-app-ramfree htop bash curl wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
     
-    # Paket tambahan berdasarkan target
     if [ "${op_target}" == "rpi-4" ]; then
         packages+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio luci-app-oled"
     elif [ "${ARCH_3}" == "x86_64" ]; then
@@ -425,7 +375,6 @@ rebuild_firmware() {
         packages+=" luci-app-amlogic ath9k-htc-firmware btrfs-progs hostapd hostapd-utils kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc kmod-cfg80211 kmod-crypto-acompress kmod-crypto-crc32c kmod-crypto-hash kmod-fs-btrfs kmod-mac80211 wireless-tools wpa-cli wpa-supplicant"
     fi
     
-    # Menambahkan paket tunnel
     local tunnel_option_list
     if [ -n "${TUNNEL_OPTION}" ]; then
         echo -e "${INFO} Menambahkan paket tunnel: ${TUNNEL_OPTION}"
@@ -452,7 +401,6 @@ rebuild_firmware() {
         done
     fi
 
-    # Paket yang dikecualikan
     local excluded_packages="-libgd"
     if [ "${op_sourse}" == "openwrt" ]; then
         excluded_packages+=" -dnsmasq"
@@ -463,13 +411,11 @@ rebuild_firmware() {
         fi
     fi
 
-    # Deteksi kernel dan kecualikan paket
     if echo "$OPENWRT_KERNEL" | grep -q "5.4"; then
         echo "[INFO] Detected kernel 5.4, excluding procd-ujail"
         excluded_packages+=" -procd-ujail"
     fi
     
-    # Jalankan proses build
     make clean
     make image PROFILE="${target_profile}" PACKAGES="${packages} ${excluded_packages}" FILES="files"
     
@@ -479,25 +425,18 @@ rebuild_firmware() {
     
     echo -e "${SUCCESS} Build firmware berhasil. File ada di: ${imagebuilder_path}/bin/targets/${target_system}"
 }
----
-## Eksekusi Skrip Utama
-**Fungsi:** Main
-**Deskripsi:** Menjalankan semua fungsi secara berurutan setelah memeriksa argumen input.
 
-```bash
 echo -e "${STEPS} Selamat datang di Rebuild OpenWrt Menggunakan Image Builder."
 if [ ! -x "${0}" ]; then
     error_msg "Harap berikan izin eksekusi pada skrip: [ chmod +x ${0} ]"
 fi
 
-# Memvalidasi argumen input
 if [[ -z "${1}" || -z "${2}" ]]; then
     echo "Penggunaan: ./imagebuilder.sh <sumber:cabang> <target> [opsi_tunnel]"
     echo "Contoh: ./imagebuilder.sh openwrt:23.05.0 x86_64 openclash"
     error_msg "Argumen tidak lengkap."
 fi
 
-# Parsing argumen
 op_sourse="${1%:*}"
 op_branch="${1#*:}"
 op_target="${2}"
@@ -506,14 +445,12 @@ TUNNEL_OPTION="${3}"
 echo -e "${INFO} Sumber: ${op_sourse}, Cabang: ${op_branch}, Target: ${op_target}"
 echo -e "${INFO} Penggunaan ruang server sebelum kompilasi:\n$(df -hT "${make_path}")\n"
 
-# Menjalankan semua tahapan
 download_imagebuilder
 adjust_settings
 custom_packages
 custom_files
 rebuild_firmware
 
-# Menampilkan informasi akhir
 echo -e "${SUCCESS} Semua proses selesai."
 echo -e "Penggunaan ruang server setelah kompilasi:\n$(df -hT "${make_path}")\n"
 exit 0
