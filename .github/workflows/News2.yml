@@ -278,7 +278,8 @@ jobs:
         
           VEROP="$(echo "${RELEASES_TAG2}" | awk -F. '{print $1"."$2}')"
           echo "VEROP=$VEROP" >> $GITHUB_ENV
-        
+          echo "RELEASES_TAG=$RELEASES_TAG" >> $GITHUB_ENV
+          echo "RELEASES_TAG2=$RELEASES_TAG2" >> $GITHUB_ENV   
           case "${TARGET_NAME}" in
             rpi-3|rpi-4) ARCH_3="aarch64_cortex-a72" ;;
             generic)     ARCH_3="x86_64" ;;
@@ -286,9 +287,12 @@ jobs:
             *)           ARCH_3="arm_cortex-a7" ;;
           esac
           echo "ARCH_3=$ARCH_3" >> $GITHUB_ENV
-        
-          echo "RELEASES_TAG=$RELEASES_TAG" >> $GITHUB_ENV
-          echo "RELEASES_TAG2=$RELEASES_TAG2" >> $GITHUB_ENV   
+          echo "BASE=${RELEASES_BRANCH%%:*}" >> $GITHUB_ENV
+
+          echo "[✓] RELEASES_TAG  : ${RELEASES_BRANCH/:/_}"
+          echo "[✓] RELEASES_TAG2 : ${RELEASES_BRANCH#*:}"
+          echo "[✓] BASE : ${RELEASES_BRANCH%%:*}"
+          echo "[✓] VEROP : ${RELEASES_TAG2}"
           
       - name: Download Custom Packages
         run: |
@@ -301,15 +305,9 @@ jobs:
         if: ${{ steps.init.outputs.status == 'success' && inputs.rootfs_url == '' && !cancelled() }}
         run: |
           echo -e "[\033[95m STEPS \033[0m] Building Firmware And Rootfs"
-          TARGET_NAME="${{ env.TARGET_NAME }}"
-          RELEASES_BRANCH="${{ inputs.releases_branch }}"
-          RELEASES_TAG="${RELEASES_BRANCH/:/_}"
-          RELEASES_TAG2="${RELEASES_BRANCH#*:}"
           export OPENWRT_KERNEL="${{ inputs.openwrt_kernel }}"
           chmod +x ${IMAGEBUILDER_SH}
           bash ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} "${{ env.TARGET_NAME }}" "${{ inputs.tunnel_option }}"
-          echo "RELEASES_TAG=$RELEASES_TAG" >> ${GITHUB_ENV}
-          echo "RELEASES_TAG2=$RELEASES_TAG2" >> ${GITHUB_ENV}
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
           
@@ -409,20 +407,6 @@ jobs:
          find . -mindepth 1 -maxdepth 1 ! -name 'bin' -exec rm -rf {} +
          echo "[✓] Ruang setelah pembersihan:"
          df -hT ${PWD}
-
-          
-      - name: Set Release Tags
-        id: setrelease
-        run: |
-          RELEASES_BRANCH="${{ inputs.releases_branch }}"
-          echo "RELEASES_BRANCH=$RELEASES_BRANCH" >> $GITHUB_ENV
-          echo "RELEASES_TAG=${RELEASES_BRANCH/:/_}" >> $GITHUB_ENV
-          echo "RELEASES_TAG2=${RELEASES_BRANCH#*:}" >> $GITHUB_ENV
-          echo "BASE=${RELEASES_BRANCH%%:*}" >> $GITHUB_ENV
-
-          echo "[✓] RELEASES_TAG  : ${RELEASES_BRANCH/:/_}"
-          echo "[✓] RELEASES_TAG2 : ${RELEASES_BRANCH#*:}"
-          echo "[✓] BASE : ${RELEASES_BRANCH%%:*}"
 
       - name: Prepare file First
         run: |
