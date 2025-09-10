@@ -41,12 +41,12 @@ on:
           - Orange Pi R1 Plus
           - Orange Pi R1 Plus LTS
           - x86-64
-          - Amlogic HG680P
-          - Amlogic B860H-V5
-          - Amlogic B860H-V1-V2
-          - Amlogic AT01
-          - Amlogic HG680-FJ
-          - Amlogic AT01_Amlogic HG680P
+          - HG680P
+          - B860H-V5
+          - B860H-V1-V2
+          - AT01
+          - HG680-FJ
+          - AT01_HG680P
       rootfs_size:
         description: "ROOTFS Size, (512, 640, 756, 1024)"
         required: true
@@ -139,8 +139,8 @@ jobs:
         run: |
           if [ "${{ inputs.target }}" == "all" ]; then
             echo "target=['Raspberry Pi 3B','Raspberry Pi 4B','NanoPi R2C','NanoPi R2S','NanoPi R4S','Orange Pi R1 Plus','Orange Pi R1 Plus LTS','x86-64','Amlogic HG680P','Amlogic B860H-V5','Amlogic AT01','Amlogic B860H-V1-V2']" >> $GITHUB_OUTPUT
-          elif [ "${{ inputs.target }}" == "Amlogic AT01_Amlogic HG680P" ]; then  
-            echo "target=['Amlogic AT01','Amlogic HG680P']" >> $GITHUB_OUTPUT
+          elif [ "${{ inputs.target }}" == "AT01_HG680P" ]; then  
+            echo "target=['AT01','HG680P']" >> $GITHUB_OUTPUT
           else
             echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
           fi
