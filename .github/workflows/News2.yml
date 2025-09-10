@@ -6,7 +6,7 @@
 #                https://downloads.immortalwrt.org/releases
 #=====================================================================================
 
-name: Build sdcard+via url+tunell+files tes
+name: Build sdcard+via url+tunell+filesbo
 
 on:
   repository_dispatch:
@@ -85,7 +85,7 @@ on:
       fwinfo:
         description: 'Firmware Information'
         required: false
-        default: "imagebuilderC.sh"
+        default: "imagebuilderB.sh"
         type: choice
         options:
           - imagebuilder.sh
@@ -126,8 +126,6 @@ env:
   IMAGEBUILDER_SH: ${{ inputs.fwinfo }}
   TUNNEL_OPTION: ${{ inputs.tunnel_option }}
   WORKING_DIR: imagebuilder
-  RELEASE_BRANCH: ${{ inputs.releases_branch }}
-  # RELEASES_TAG2: "$RELEASES_BRANCH#*:"
   DOWNLOAD_URL: "https://tes-rep.github.io/Server-repo/"  # Ganti dengan URL release repo kamu
 jobs:
   prebuild:
@@ -135,11 +133,6 @@ jobs:
     name: ${{ inputs.releases_branch }}
     outputs:
       target: ${{ steps.set-matrix.outputs.target }}
-      base: ${{ steps.setupenv.outputs.base }}
-      branch: ${{ steps.setupenv.outputs.branch }}
-      verop: ${{ steps.setupenv.outputs.verop }}
-      
-      
     steps:
       - name: Set Matrix Run
         id: set-matrix
@@ -155,28 +148,10 @@ jobs:
               echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
               ;;
            esac
-
-      - name: Setup Release Environment
-        id: setupenv
-        run: |
-          
-
-          BASE="${RELEASE_BRANCH%:*}"
-          BRANCH="${RELEASE_BRANCH#*:}"
-          VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
-
-          echo "base=$BASE" >> $GITHUB_OUTPUT
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
-          echo "verop=$VEROP" >> $GITHUB_OUTPUT
-              
   build:
     needs: prebuild
+    runs-on: ubuntu-24.04
     if: ${{ github.event.repository.owner.id }} == ${{ github.event.sender.id }}
-    runs-on: ubuntu-22.04
-    env:
-      BASE: ${{ needs.prebuild.outputs.base }}
-      BRANCH: ${{ needs.prebuild.outputs.branch }}
-      VEROP: ${{ needs.prebuild.outputs.verop }}
     name: "${{ matrix.target }}"
     strategy:
       fail-fast: false
@@ -293,6 +268,32 @@ jobs:
 
          echo "status=success" >> ${GITHUB_OUTPUT}
          echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
+         
+      - name: Set ENV (VEROP & ARCH_3)
+        run: |
+          TARGET_NAME="${{ env.TARGET_NAME }}"
+          RELEASES_BRANCH="${{ inputs.releases_branch }}"
+          RELEASES_TAG="${RELEASES_BRANCH/:/_}"
+          RELEASES_TAG2="${RELEASES_BRANCH#*:}"
+        
+          VEROP="$(echo "${RELEASES_TAG2}" | awk -F. '{print $1"."$2}')"
+          echo "VEROP=$VEROP" >> $GITHUB_ENV
+        
+          case "${TARGET_NAME}" in
+            rpi-3|rpi-4) ARCH_3="aarch64_cortex-a72" ;;
+            generic)     ARCH_3="x86_64" ;;
+            amlogic)     ARCH_3="aarch64_generic" ;;
+            *)           ARCH_3="arm_cortex-a7" ;;
+          esac
+          echo "ARCH_3=$ARCH_3" >> $GITHUB_ENV
+        
+          echo "RELEASES_TAG=$RELEASES_TAG" >> $GITHUB_ENV
+          echo "RELEASES_TAG2=$RELEASES_TAG2" >> $GITHUB_ENV   
+          
+      - name: Download Custom Packages
+        run: |
+        chmod +x scripts/PACKAGES.sh
+        ./scripts/PACKAGES.sh    
 
 
       - name: Build Rootfs [ ${{ inputs.releases_branch }} ]
@@ -302,23 +303,13 @@ jobs:
           echo -e "[\033[95m STEPS \033[0m] Building Firmware And Rootfs"
           TARGET_NAME="${{ env.TARGET_NAME }}"
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
-          echo "RELEASES_BRANCH=$RELEASES_BRANCH" >> $GITHUB_ENV
-          echo "RELEASES_TAG=${RELEASES_BRANCH/:/_}" >> $GITHUB_ENV
-          echo "RELEASES_TAG2=${RELEASES_BRANCH#*:}" >> $GITHUB_ENV
-          echo "BASE=${RELEASES_BRANCH%%:*}" >> $GITHUB_ENV
-
-          case "${TARGET_NAME}" in
-            rpi-3|rpi-4) ARCH_3="aarch64_cortex-a72" ;;
-            generic)     ARCH_3="x86_64" ;;
-            amlogic)     ARCH_3="aarch64_generic" ;;
-            *)           ARCH_3="arm_cortex-a7" ;;
-          esac
-          echo "ARCH_3=$ARCH_3" >> $GITHUB_ENV
+          RELEASES_TAG="${RELEASES_BRANCH/:/_}"
+          RELEASES_TAG2="${RELEASES_BRANCH#*:}"
           export OPENWRT_KERNEL="${{ inputs.openwrt_kernel }}"
-          chmod +x scripts/PACKAGES.sh
-          ./scripts/PACKAGES.sh
           chmod +x ${IMAGEBUILDER_SH}
           bash ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} "${{ env.TARGET_NAME }}" "${{ inputs.tunnel_option }}"
+          echo "RELEASES_TAG=$RELEASES_TAG" >> ${GITHUB_ENV}
+          echo "RELEASES_TAG2=$RELEASES_TAG2" >> ${GITHUB_ENV}
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
           
