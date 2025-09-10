@@ -235,27 +235,27 @@ jobs:
            echo "TARGET_NAME=generic" >> $GITHUB_ENV
            echo "TAG_NAME=openwrt_generic" >> $GITHUB_ENV
            ;;
-         "Amlogic HG680P")
+         "HG680P")
            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
            echo "openwrt_board=s905x" >> $GITHUB_ENV
            echo "TAG_NAME=openwrt_amlogic_s905x" >> $GITHUB_ENV
            ;;
-         "Amlogic B860H-V5")
+         "B860H-V5")
            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
            echo "openwrt_board=s905x2-b860h-v5" >> $GITHUB_ENV
            echo "TAG_NAME=openwrt_amlogic_s905x-b860h" >> $GITHUB_ENV
            ;;
-         "Amlogic B860H-V1-V2")
+         "B860H-V1-V2")
            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
            echo "openwrt_board=s905x2" >> $GITHUB_ENV
            echo "TAG_NAME=openwrt_amlogic_s905x2" >> $GITHUB_ENV
            ;;
-         "Amlogic AT01")
+         "AT01")
            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
            echo "openwrt_board=s905x4-advan" >> $GITHUB_ENV
            echo "TAG_NAME=openwrt_amlogic_s905x4" >> $GITHUB_ENV
            ;;
-         "Amlogic HG680-FJ")
+         "HG680-FJ")
            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
            echo "openwrt_board=s905x2-hg680-fj" >> $GITHUB_ENV
            echo "TAG_NAME=openwrt_amlogic_s905x2-hg680-fj" >> $GITHUB_ENV
