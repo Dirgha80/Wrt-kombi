@@ -186,6 +186,7 @@ jobs:
           echo "BUILD_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
           echo "TAG_DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
 
+          # Set environment variables based on the target
           case "${{ matrix.target }}" in
               "Raspberry Pi 3B")    echo "TARGET_NAME=rpi-3" >> $GITHUB_ENV ;;
               "Raspberry Pi 4B")    echo "TARGET_NAME=rpi-4" >> $GITHUB_ENV ;;
@@ -201,10 +202,18 @@ jobs:
               "Amlogic AT01")       echo "TARGET_NAME=amlogic" >> $GITHUB_ENV ; echo "OPENWRT_BOARD=s905x4-advan" >> $GITHUB_ENV ;;
               "Amlogic HG680-FJ")   echo "TARGET_NAME=amlogic" >> $GITHUB_ENV ; echo "OPENWRT_BOARD=s905x2-hg680-fj" >> $GITHUB_ENV ;;
           esac
-          
-          echo "RELEASE_TAG=${{ inputs.releases_branch/:/_ }}" >> $GITHUB_ENV
-          echo "RELEASE_TAG_SHORT=${{ inputs.releases_branch#*: }}" >> $GITHUB_ENV
-          echo "RELEASE_BASE=${{ inputs.releases_branch%%:* }}" >> $GITHUB_ENV
+
+          # Process the release branch string in Bash
+          RELEASES_BRANCH="${{ inputs.releases_branch }}"
+          RELEASES_TAG="${RELEASES_BRANCH/:/_}"
+          RELEASES_TAG_SHORT="${RELEASES_BRANCH#*:}"
+          RELEASES_BASE="${RELEASES_BRANCH%%:*}"
+
+          echo "RELEASE_TAG=$RELEASES_TAG" >> $GITHUB_ENV
+          echo "RELEASE_TAG_SHORT=$RELEASES_TAG_SHORT" >> $GITHUB_ENV
+          echo "RELEASE_BASE=$RELEASES_BASE" >> $GITHUB_ENV
+
+          echo "::endgroup::"
 
       - name: Build Firmware
         if: ${{ inputs.rootfs_url == '' }}
