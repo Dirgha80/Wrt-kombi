@@ -210,10 +210,6 @@ main() {
           "_s905x-b860h_k6.12.*:meson-gxl-s905x-b860h.dtb:B860H"
         )
         ;;
-      *)
-        echo "❌ Unknown TARGET: $TARGET"
-        return 1
-        ;;
     esac
     
     # Validate environment
