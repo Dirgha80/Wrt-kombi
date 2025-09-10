@@ -192,21 +192,29 @@ main() {
 
     # konfigurasi builds MATRIXTARGET
     local builds=()
-    if [[ "$TARGET" == "Amlogic HG680P" ]]; then
+
+    case "$TARGET" in
+      "HG680P")
         builds=(
-            "_s905x_k5.15.*:meson-gxl-s905x-p212.dtb:HG680P"
-            "_s905x_k6.1.*:meson-gxl-s905x-p212.dtb:HG680P"
-            "_s905x_k6.6.*:meson-gxl-s905x-p212.dtb:HG680P"
-            "_s905x_k6.12.*:meson-gxl-s905x-p212.dtb:HG680P"
+          "_s905x_k5.15.*:meson-gxl-s905x-p212.dtb:HG680P"
+          "_s905x_k6.1.*:meson-gxl-s905x-p212.dtb:HG680P"
+          "_s905x_k6.6.*:meson-gxl-s905x-p212.dtb:HG680P"
+          "_s905x_k6.12.*:meson-gxl-s905x-p212.dtb:HG680P"
         )
-    elif [[ "$TARGET" == "Amlogic B860H-V1-V2" ]]; then
+        ;;
+      "B860H-V1-V2")
         builds=(
-            "_s905x-b860h_k5.15.*:meson-gxl-s905x-b860h.dtb:B860H"
-            "_s905x-b860h_k6.1.*:meson-gxl-s905x-b860h.dtb:B860H"
-            "_s905x-b860h_k6.6.*:meson-gxl-s905x-b860h.dtb:B860H"
-            "_s905x-b860h_k6.12.*:meson-gxl-s905x-b860h.dtb:B860H"
+          "_s905x-b860h_k5.15.*:meson-gxl-s905x-b860h.dtb:B860H"
+          "_s905x-b860h_k6.1.*:meson-gxl-s905x-b860h.dtb:B860H"
+          "_s905x-b860h_k6.6.*:meson-gxl-s905x-b860h.dtb:B860H"
+          "_s905x-b860h_k6.12.*:meson-gxl-s905x-b860h.dtb:B860H"
         )
-    fi
+        ;;
+      *)
+        echo "❌ Unknown TARGET: $TARGET"
+        return 1
+        ;;
+    esac
     
     # Validate environment
     if [[ ! -d "$img_dir" ]]; then
