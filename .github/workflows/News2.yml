@@ -292,8 +292,8 @@ jobs:
           
       - name: Download Custom Packages
         run: |
-        chmod +x scripts/PACKAGES.sh
-        ./scripts/PACKAGES.sh    
+          chmod +x scripts/PACKAGES.sh
+          ./scripts/PACKAGES.sh    
 
 
       - name: Build Rootfs [ ${{ inputs.releases_branch }} ]
