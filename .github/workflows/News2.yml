@@ -135,6 +135,17 @@ jobs:
     name: ${{ inputs.releases_branch }}
     outputs:
       target: ${{ steps.set-matrix.outputs.target }}
+      type: ${{ steps.setupenv.outputs.type }}
+      base: ${{ steps.setupenv.outputs.base }}
+      branch: ${{ steps.setupenv.outputs.branch }}
+      verop: ${{ steps.setupenv.outputs.verop }}
+      download_base: ${{ steps.setupenv.outputs.download_base }}
+      date: ${{ steps.setupenv.outputs.date }}
+      datetime: ${{ steps.setupenv.outputs.datetime }}
+      datemonth: ${{ steps.setupenv.outputs.datemonth }}
+      release_name: ${{ steps.setupenv.outputs.release_name }}
+      release_tag: ${{ steps.setupenv.outputs.release_tag }}
+      
     steps:
       - name: Set Matrix Run
         id: set-matrix
@@ -152,7 +163,18 @@ jobs:
            esac
   build:
     needs: prebuild
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
+    env:
+      TYPE: ${{ needs.prebuild.outputs.type }}
+      BASE: ${{ needs.prebuild.outputs.base }}
+      BRANCH: ${{ needs.prebuild.outputs.branch }}
+      VEROP: ${{ needs.prebuild.outputs.verop }}
+      DOWNLOAD_BASE: ${{ needs.prebuild.outputs.download_base }}
+      DATE: ${{ needs.prebuild.outputs.date }}
+      DATETIME: ${{ needs.prebuild.outputs.datetime }}
+      DATEMONTH: ${{ needs.prebuild.outputs.datemonth }}
+      RELEASE_NAME: ${{ needs.prebuild.outputs.release_name }}
+      RELEASE_TAG: ${{ needs.prebuild.outputs.release_tag }}
     if: ${{ github.event.repository.owner.id }} == ${{ github.event.sender.id }}
     name: "${{ matrix.target }}"
     strategy:
