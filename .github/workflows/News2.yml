@@ -127,7 +127,7 @@ env:
   TUNNEL_OPTION: ${{ inputs.tunnel_option }}
   WORKING_DIR: imagebuilder
   RELEASES_BRANCH: ${{ inputs.releases_branch }}
-  RELEASES_TAG2: ${{RELEASES_BRANCH#*:}}
+  RELEASES_TAG2: $RELEASES_BRANCH#*:
   DOWNLOAD_URL: "https://tes-rep.github.io/Server-repo/"  # Ganti dengan URL release repo kamu
 jobs:
   prebuild:
@@ -278,11 +278,11 @@ jobs:
         run: |
           echo -e "[\033[95m STEPS \033[0m] Building Firmware And Rootfs"
           TARGET_NAME="${{ env.TARGET_NAME }}"
-          #RELEASES_BRANCH="${{ inputs.releases_branch }}"
-          RELEASES_TAG="${RELEASES_BRANCH/:/_}"
-          RELEASES_TAG2="${RELEASES_BRANCH#*:}"
-          VEROP="$(echo "${RELEASES_TAG2}" | awk -F. '{print $1"."$2}')"
-          echo "VEROP=$VEROP" >> $GITHUB_ENV
+          RELEASES_BRANCH="${{ inputs.releases_branch }}"
+          echo "RELEASES_BRANCH=$RELEASES_BRANCH" >> $GITHUB_ENV
+          echo "RELEASES_TAG=${RELEASES_BRANCH/:/_}" >> $GITHUB_ENV
+          echo "RELEASES_TAG2=${RELEASES_BRANCH#*:}" >> $GITHUB_ENV
+          echo "BASE=${RELEASES_BRANCH%%:*}" >> $GITHUB_ENV
 
           case "${TARGET_NAME}" in
             rpi-3|rpi-4) ARCH_3="aarch64_cortex-a72" ;;
@@ -291,8 +291,6 @@ jobs:
             *)           ARCH_3="arm_cortex-a7" ;;
           esac
           echo "ARCH_3=$ARCH_3" >> $GITHUB_ENV
-          echo "RELEASES_TAG=$RELEASES_TAG" >> ${GITHUB_ENV}
-          echo "RELEASES_TAG2=$RELEASES_TAG2" >> ${GITHUB_ENV}
           export OPENWRT_KERNEL="${{ inputs.openwrt_kernel }}"
           chmod +x scripts/PACKAGES.sh
           ./scripts/PACKAGES.sh
