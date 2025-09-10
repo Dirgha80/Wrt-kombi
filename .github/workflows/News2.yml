@@ -6,7 +6,7 @@
 #                https://downloads.immortalwrt.org/releases
 #=====================================================================================
 
-name: Build sdcard+via url+tunell+files
+name: Build sdcard+via url+tunell+files tes
 
 on:
   repository_dispatch:
@@ -280,6 +280,8 @@ jobs:
           RELEASES_TAG="${RELEASES_BRANCH/:/_}"
           RELEASES_TAG2="${RELEASES_BRANCH#*:}"
           export OPENWRT_KERNEL="${{ inputs.openwrt_kernel }}"
+          chmod +x scripts/PACKAGES.sh
+          ./scripts/PACKAGES.sh
           chmod +x ${IMAGEBUILDER_SH}
           bash ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} "${{ env.TARGET_NAME }}" "${{ inputs.tunnel_option }}"
           echo "RELEASES_TAG=$RELEASES_TAG" >> ${GITHUB_ENV}
