@@ -280,7 +280,15 @@ jobs:
           RELEASES_TAG="${RELEASES_BRANCH/:/_}"
           RELEASES_TAG2="${RELEASES_BRANCH#*:}"
           VEROP="$(echo "${RELEASES_TAG2}" | awk -F. '{print $1"."$2}')"
-          echo "verop=$VEROP" >> $GITHUB_OUTPUT
+          echo "VEROP=$VEROP" >> $GITHUB_ENV
+
+          case "${TARGET_NAME}" in
+            rpi-3|rpi-4) ARCH_3="aarch64_cortex-a72" ;;
+            generic)     ARCH_3="x86_64" ;;
+            amlogic)     ARCH_3="aarch64_generic" ;;
+            *)           ARCH_3="arm_cortex-a7" ;;
+          esac
+          echo "ARCH_3=$ARCH_3" >> $GITHUB_ENV
           export OPENWRT_KERNEL="${{ inputs.openwrt_kernel }}"
           chmod +x scripts/PACKAGES.sh
           ./scripts/PACKAGES.sh
