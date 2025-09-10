@@ -29,7 +29,7 @@ on:
       target:
         description: "Select device Target"
         required: true
-        default: "Amlogic AT01"
+        default: "AT01"
         type: choice
         options:
           - all
