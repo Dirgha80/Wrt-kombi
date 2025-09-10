@@ -10,7 +10,7 @@ fi
 
 # Define repositories with proper quoting
 declare -A REPOS
-local cur_ver=$(echo "${VEROP}" | awk -F. '{print $1"."$2}')
+cur_ver=$(echo "${VEROP}" | awk -F. '{print $1"."$2}')
 REPOS+=(
     ["OPENWRT"]="https://downloads.openwrt.org/releases/${VEROP}/packages/${ARCH_3}"
     ["IMMORTALWRT"]="https://downloads.immortalwrt.org/releases/${VEROP}/packages/${ARCH_3}"
