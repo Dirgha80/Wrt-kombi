@@ -171,6 +171,7 @@ jobs:
               
   build:
     needs: prebuild
+    if: ${{ github.event.repository.owner.id }} == ${{ github.event.sender.id }}
     runs-on: ubuntu-22.04
     env:
       BASE: ${{ needs.prebuild.outputs.base }}
