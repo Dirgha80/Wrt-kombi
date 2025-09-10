@@ -126,7 +126,7 @@ env:
   IMAGEBUILDER_SH: ${{ inputs.fwinfo }}
   TUNNEL_OPTION: ${{ inputs.tunnel_option }}
   WORKING_DIR: imagebuilder
-  RELEASE_BRANCH: ${{ github.event.inputs.release_branch }}
+  RELEASES_BRANCH: ${{ inputs.releases_branch }}
   DOWNLOAD_URL: "https://tes-rep.github.io/Server-repo/"  # Ganti dengan URL release repo kamu
 jobs:
   prebuild:
