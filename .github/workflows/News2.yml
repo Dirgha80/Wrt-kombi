@@ -135,16 +135,10 @@ jobs:
     name: ${{ inputs.releases_branch }}
     outputs:
       target: ${{ steps.set-matrix.outputs.target }}
-      type: ${{ steps.setupenv.outputs.type }}
       base: ${{ steps.setupenv.outputs.base }}
       branch: ${{ steps.setupenv.outputs.branch }}
       verop: ${{ steps.setupenv.outputs.verop }}
-      download_base: ${{ steps.setupenv.outputs.download_base }}
-      date: ${{ steps.setupenv.outputs.date }}
-      datetime: ${{ steps.setupenv.outputs.datetime }}
-      datemonth: ${{ steps.setupenv.outputs.datemonth }}
-      release_name: ${{ steps.setupenv.outputs.release_name }}
-      release_tag: ${{ steps.setupenv.outputs.release_tag }}
+      
       
     steps:
       - name: Set Matrix Run
@@ -165,10 +159,7 @@ jobs:
       - name: Setup Release Environment
         id: setupenv
         run: |
-          sudo timedatectl set-timezone "${{ env.TZ }}"
-
-          TYPE="OPHUB"
-          echo "type=$TYPE" >> $GITHUB_OUTPUT
+          
 
           BASE="${RELEASE_BRANCH%:*}"
           BRANCH="${RELEASE_BRANCH#*:}"
@@ -177,43 +168,14 @@ jobs:
           echo "base=$BASE" >> $GITHUB_OUTPUT
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
           echo "verop=$VEROP" >> $GITHUB_OUTPUT
-          echo "download_base=https://downloads.${BASE}.org" >> $GITHUB_OUTPUT
-
-          DATE=$(date +'%d%m%Y')
-          DATETIME=$(date +'%d.%m.%Y-%H:%M:%S')
-          DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')
-
-          echo "date=$DATE" >> $GITHUB_OUTPUT
-          echo "datetime=$DATETIME" >> $GITHUB_OUTPUT
-          echo "datemonth=$DATEMONTH" >> $GITHUB_OUTPUT
-
-          if [ "${BASE}" == "openwrt" ]; then
-            RELEASE_NAME="Ophub-OpenWRT-${BRANCH}-${DATE}"
-            RELEASE_TAG="ophub-openwrt-${BRANCH}-${DATE}"
-            echo "release_name=$RELEASE_NAME" >> $GITHUB_OUTPUT
-            echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
-          elif [ "${BASE}" == "immortalwrt" ]; then
-            RELEASE_NAME="Ophub-ImmortalWRT-${BRANCH}-${DATE}"
-            RELEASE_TAG="ophub-immortalwrt-${BRANCH}-${DATE}"
-            echo "release_name=$RELEASE_NAME" >> $GITHUB_OUTPUT
-            echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
-          fi
-          echo "status=success" >> $GITHUB_OUTPUT    
+              
   build:
     needs: prebuild
     runs-on: ubuntu-22.04
     env:
-      TYPE: ${{ needs.prebuild.outputs.type }}
       BASE: ${{ needs.prebuild.outputs.base }}
       BRANCH: ${{ needs.prebuild.outputs.branch }}
       VEROP: ${{ needs.prebuild.outputs.verop }}
-      DOWNLOAD_BASE: ${{ needs.prebuild.outputs.download_base }}
-      DATE: ${{ needs.prebuild.outputs.date }}
-      DATETIME: ${{ needs.prebuild.outputs.datetime }}
-      DATEMONTH: ${{ needs.prebuild.outputs.datemonth }}
-      RELEASE_NAME: ${{ needs.prebuild.outputs.release_name }}
-      RELEASE_TAG: ${{ needs.prebuild.outputs.release_tag }}
-    if: ${{ github.event.repository.owner.id }} == ${{ github.event.sender.id }}
     name: "${{ matrix.target }}"
     strategy:
       fail-fast: false
