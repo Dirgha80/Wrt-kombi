@@ -71,12 +71,7 @@ packages_custom+=(
     "luci-app-ipinfo_|https://api.github.com/repos/bobbyunknown/luci-app-ipinfo/releases/latest"
 )
 
-if [[ "${TYPE}" == "OPHUB" || "${TYPE}" == "ULO" ]]; then
-    log "INFO" "Add Packages Amlogic In ${TYPE}.."
-    packages_custom+=(
-        "luci-app-amlogic_|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest"
-    )
-fi
+
 
 # Enhanced package verification function
 verify_packages() {
