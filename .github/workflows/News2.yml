@@ -289,13 +289,13 @@ jobs:
             *)           ARCH_3="arm_cortex-a7" ;;
           esac
           echo "ARCH_3=$ARCH_3" >> $GITHUB_ENV
+          echo "RELEASES_TAG=$RELEASES_TAG" >> ${GITHUB_ENV}
+          echo "RELEASES_TAG2=$RELEASES_TAG2" >> ${GITHUB_ENV}
           export OPENWRT_KERNEL="${{ inputs.openwrt_kernel }}"
           chmod +x scripts/PACKAGES.sh
           ./scripts/PACKAGES.sh
           chmod +x ${IMAGEBUILDER_SH}
           bash ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} "${{ env.TARGET_NAME }}" "${{ inputs.tunnel_option }}"
-          echo "RELEASES_TAG=$RELEASES_TAG" >> ${GITHUB_ENV}
-          echo "RELEASES_TAG2=$RELEASES_TAG2" >> ${GITHUB_ENV}
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
           
