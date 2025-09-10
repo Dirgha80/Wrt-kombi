@@ -10,10 +10,11 @@ fi
 
 # Define repositories with proper quoting
 declare -A REPOS
+local cur_ver=$(echo "${op_branch}" | awk -F. '{print $1"."$2}')
 REPOS+=(
-    ["OPENWRT"]="https://downloads.openwrt.org/releases/packages-${VEROP}/${ARCH_3}"
-    ["IMMORTALWRT"]="https://downloads.immortalwrt.org/releases/packages-${VEROP}/${ARCH_3}"
-    ["KIDDIN9"]="https://dl.openwrt.ai/releases/24.10/packages/${ARCH_3}/kiddin9"
+    ["OPENWRT"]="https://downloads.openwrt.org/releases/${op_branch}/packages/${ARCH_3}"
+    ["IMMORTALWRT"]="https://downloads.immortalwrt.org/releases/${op_branch}/packages/${ARCH_3}"
+    ["KIDDIN9"]="https://dl.openwrt.ai/packages-${cur_ver}/${ARCH_3}/kiddin9"
     ["GSPOTX2F"]="https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
     ["FANTASTIC"]="https://fantastic-packages.github.io/packages/releases/${VEROP}/packages/x86_64"
     ["DLLKIDS"]="https://op.dllkids.xyz/packages/${ARCH_3}"
