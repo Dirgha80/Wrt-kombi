@@ -279,6 +279,8 @@ jobs:
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
           RELEASES_TAG="${RELEASES_BRANCH/:/_}"
           RELEASES_TAG2="${RELEASES_BRANCH#*:}"
+          VEROP="$(echo "${RELEASES_TAG2}" | awk -F. '{print $1"."$2}')"
+          echo "verop=$VEROP" >> $GITHUB_OUTPUT
           export OPENWRT_KERNEL="${{ inputs.openwrt_kernel }}"
           chmod +x scripts/PACKAGES.sh
           ./scripts/PACKAGES.sh
