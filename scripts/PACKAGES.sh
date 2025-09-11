@@ -8,6 +8,44 @@ fi
 
 . ./scripts/INCLUDE.sh
 
+# Pastikan TARGET_NAME ada
+: "${TARGET_NAME:?TARGET_NAME not set}"
+
+# Tentukan ARCH_3 berdasarkan target
+case "${TARGET_NAME}" in
+            amlogic|AMLOGIC)
+                ARCH_3="aarch64_generic"
+                ;;
+            rpi-3)
+                ARCH_3="aarch64_cortex-a53"
+                ;;
+            rpi-4)
+                ARCH_3="aarch64_cortex-a72"
+                ;;
+            friendlyarm_nanopi-r2c|nanopi-r2c)
+                ARCH_3="aarch64_generic"
+                ;;
+            friendlyarm_nanopi-r2s|nanopi-r2s)
+                ARCH_3="aarch64_generic"
+                ;;
+            friendlyarm_nanopi-r4s|nanopi-r4s)
+                ARCH_3="aarch64_generic"
+                ;;
+            xunlong_orangepi-r1-plus|orangepi-r1-plus)
+                ARCH_3="aarch64_generic"
+                ;;
+            xunlong_orangepi-r1-plus-lts|orangepi-r1-plus-lts)
+                ARCH_3="aarch64_generic"
+                ;;
+            generic|x86-64|x86_64)
+                ARCH_3="x86_64"
+                ;;
+             *)
+                error_msg "Unknown TARGET_NAME: ${TARGET_NAME}"
+                exit 1
+                ;;   
+          esac
+
 # Define repositories with proper quoting
 declare -A REPOS
 #cur_ver=$(echo "${VEROP}" | awk -F. '{print $1"."$2}')
