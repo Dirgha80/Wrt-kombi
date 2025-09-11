@@ -280,117 +280,117 @@ jobs:
            echo "openwrt_board=s905x2-hg680-fj" >> $GITHUB_ENV
            echo "TAG_NAME=openwrt_amlogic_s905x2-hg680-fj" >> $GITHUB_ENV
            ;;
-         "Amlogic s905 MXQ-Pro+")
+         "s905 MXQ-Pro+")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905-mxqpro-plus" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;
-         "Amlogic s905 Beelink-Mini")
+         "s905 Beelink-Mini")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905-beelink-mini" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;
-         "Amlogic s905d Phicomm-N1")
+         "s905d Phicomm-N1")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905d" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;
-         "Amlogic s905l B860AV2")
+         "s905l B860AV2")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905l" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;
-         "Amlogic s905l Mibox-4")
+         "s905l Mibox-4")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905l-mg101" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;     
-         "Amlogic s905l2 M301A")
+         "s905l2 M301A")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905l2" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;
-         "Amlogic s905l2 MGV-M301A")
+         "s905l2 MGV-M301A")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905l2" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;     
-         "Amlogic s905l3 HG680-LC")
+         "s905l3 HG680-LC")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905l3" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;     
-         "Amlogic s905l3a B863AV3")
+         "s905l3a B863AV3")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905l3a-m401a" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;     
-         "Amlogic s905l3b MGV2000")
+         "s905l3b MGV2000")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905l3b-e900v22e" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;     
-         "Amlogic s905lb Q96-Mini")
+         "s905lb Q96-Mini")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905lb-q96-mini" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;     
-         "Amlogic s905w TX3-Mini")
+         "s905w TX3-Mini")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905w" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;     
-         "Amlogic s905w X96-Mini")
+         "s905w X96-Mini")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905w-x96-mini" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;
-         "Amlogic s912 Nexbox-A95X-A2")
+         "s912 Nexbox-A95X-A2")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s912-nexbox-a2" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;     
-         "Amlogic s912 Nexbox-A1-A95X")
+         "s912 Nexbox-A1-A95X")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s912-nexbox-a1" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;     
-         "Amlogic s905x3 X96Max+_1Gb")
+         "s905x3 X96Max+_1Gb")
            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905x3-x96max" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;     
-         "Amlogic s905x3 X96Max+_100Mb")
+         "s905x3 X96Max+_100Mb")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905x3" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;     
-         "Amlogic s905x3 X96Air_1Gb")
+         "s905x3 X96Air_1Gb")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905x3-x96air-gb" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;     
-         "Amlogic s905x3 X96Air_100mb")
+         "s905x3 X96Air_100mb")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905x3-x96air" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;     
-         "Amlogic s905x3 HK1-Vontar-X3")
+         "s905x3 HK1-Vontar-X3")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905x3-hk1" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;
-         "Amlogic s905x2 X96Max-v4Gb")
+         "s905x2 X96Max-v4Gb")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905x2" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;     
-         "Amlogic s905x2 X96Max-v4Gb")
+         "s905x2 X96Max-v4Gb")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905x2" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;     
-         "Amlogic s905x2 X96Max-v2Gb")
+         "s905x2 X96Max-v2Gb")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s905x2-x96max-2g" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
@@ -425,7 +425,7 @@ jobs:
             echo "openwrt_board="renegade-rk3328" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
            ;;     
-         "Amlogic s922x GT-King-Pro")
+         "s922x GT-King-Pro")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board="s922x" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
