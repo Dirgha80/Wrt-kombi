@@ -6,7 +6,8 @@
 #                https://downloads.immortalwrt.org/releases
 #=====================================================================================
 
-name: Build OpenWrt
+name: Build sdcard+via tes
+
 on:
   repository_dispatch:
   workflow_dispatch:
@@ -14,16 +15,21 @@ on:
       releases_branch:
         description: "Select the releases branch"
         required: false
-        default: "openwrt:24.10.0-rc4"
+        default: "openwrt:24.10.2"
         type: choice
         options:
+          - immortalwrt:24.10.1
+          - immortalwrt:24.10.2
           - immortalwrt:23.05.4
+          - openwrt:24.10.2
+          - openwrt:24.10.1
           - openwrt:23.05.5
-          - openwrt:24.10.0-rc4
+          - openwrt:23.05.6
+  
       target:
-        description: "Select device target:"
+        description: "Select device Target"
         required: true
-        default: "Amlogic HG680P"
+        default: "AT01"
         type: choice
         options:
           - all
@@ -35,64 +41,82 @@ on:
           - Orange Pi R1 Plus
           - Orange Pi R1 Plus LTS
           - x86-64
-          - Amlogic HG680P
-          - Amlogic B860H-V5
-          - Amlogic B860H-V1-V2
+          - HG680P
+          - B860H-V5
+          - B860H-V1-V2
+          - AT01
+          - HG680-FJ
+          - s905 MXQ-Pro+
+          - s905 Beelink-Mini
+          - s905lb Q96-Mini
+          - s905w TX3-Mini
+          - s905w X96-Mini
+          - s905l Mibox-4
+          - s905l2 M301A
+          - s905x2 X96Max-v2Gb
+          - s905x2 X96Max-v4Gb
+          - s905x3 HK1-Vontar-X3
+          - s905x3 X96Air_100mb
+          - s905x3 X96Air_1Gb
+          - s905x3 X96Max+_100Mb
+          - s905x3 X96Max+_1Gb
+          - s912 Nexbox-A1-A95X
+          - s912 Nexbox-A95X-A2
+          - s922x GT-King-Pro
+          - RK3318-BOX
+          - Firefly-RK3328
+          - RK3399 King3399
+          - AT01_HG680P
       rootfs_size:
-         description: "ROOTFS SIZE 512 640 768 1024"
-         required: true
-         default: '1024'
-         type: string  
+        description: "ROOTFS Size, (512, 640, 756, 1024)"
+        required: true
+        default: "1024"
+      openwrt_kernel:
+        description: "Select kernel version"
+        required: false
+        default: "6.6.y_6.12.y"
+        type: choice
+        options:
+          - 5.4.y
+          - 5.10.y
+          - 5.15.y
+          - 6.1.y
+          - 6.6.y
+          - 6.12.y
+          - 6.1.y_6.6.y
+          - 5.15.y_5.10.y
+          - 6.6.y_6.12.y
+     
+      kernel_usage:
+        description: "Set the tags of the stable kernel."
+        required: false
+        default: "stable"
+        type: choice
+        options:
+          - stable
+          - flippy
+          - dev
+          - s905x4
       upload-prerelease:
         description: "Upload as pre-release"
         required: false
         default: "false"
-        type: boolean     
-      kernel:
-        description: 'Kernel Version (ex. 6.6.6, 6.1.31-localversion)'
-        required: true
-        default: '6.1.66-DBAI'
-        type: string
-      devices:
-        description: "Devices"
-        required: true
-        default: "s905x4"
-        type: choice
-        options:
-          - s905x
-          - s905x2
-          - s905x3
-          - s905x4
-          - h5-orangepi-zeroplus2
-          - h5-orangepi-zeroplus
-          - h5-orangepi-prime
-          - h5-orangepi-pc2
-          - h6-orangepi-lite2
-          - h6-orangepi-1plus
-          - h6-orangepi-3
-          - h6-orangepi-3lts
-          - h616-orangepi-zero2
-          - h618-orangepi-zero2w
-          - h618-orangepi-zero3
-          - rk3566-orangepi-3b
-          - rk3588-orangepi-5plus
-          - rk3588s-orangepi-5
-      versi:
-        description: "Pilih ULO / ULO2"
-        required: true
-        default: "ulo2"     
-        type: choice
-        options:
-          - ulo
-          - ulo2
+        type: boolean
       fwinfo:
         description: 'Firmware Information'
         required: false
-        default: "imagebuilderA.sh"
+        default: "imagebuilderB.sh"
         type: choice
         options:
           - imagebuilder.sh
           - imagebuilderA.sh
+          - imagebuilderB.sh  
+          - imagebuilderC.sh  
+          - imagebuilderD.sh
+      rootfs_url:    
+        description: "Optional: Download ROOTFS archive from URL"
+        required: false
+        default: ""    
       type_file:
         description: "Select type file"
         required: false
@@ -101,16 +125,28 @@ on:
         options:
           - img.xz
           - img.gz
-      rename_rootfs:
-        description: "ganti nama rootfs"
+          - tar.gz
+      tunnel_option:
+        description: "Select tunnel packages to include"
         required: false
-        default: ""     
-        type: string     
-
-
+        default: "openclash"
+        type: choice
+        options:
+          - ""
+          - openclash
+          - passwall
+          - nikki
+          - openclash-passwall
+          - nikki-passwall
+          - nikki-openclash
+          - all-tunnel
+    
 env:
   TZ: Asia/Jakarta
   IMAGEBUILDER_SH: ${{ inputs.fwinfo }}
+  TUNNEL_OPTION: ${{ inputs.tunnel_option }}
+  WORKING_DIR: imagebuilder
+  DOWNLOAD_URL: "https://tes-rep.github.io/Server-repo/"  # Ganti dengan URL release repo kamu
 jobs:
   prebuild:
     runs-on: ubuntu-latest
@@ -121,11 +157,17 @@ jobs:
       - name: Set Matrix Run
         id: set-matrix
         run: |
-          if [ "${{ inputs.target }}" == "all" ]; then
-            echo "target=['Raspberry Pi 3B','Raspberry Pi 4B','NanoPi R2C','NanoPi R2S','NanoPi R4S','Orange Pi R1 Plus','Orange Pi R1 Plus LTS','x86-64','Amlogic HG680P','Amlogic B860H-V5','Amlogic B860H-V1-V2']" >> $GITHUB_OUTPUT
-          else
-            echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
-          fi
+          case "${{ inputs.target }}" in
+            "all")
+              echo "target=['Raspberry Pi 3B','Raspberry Pi 4B','NanoPi R2C','NanoPi R2S','NanoPi R4S','Orange Pi R1 Plus','Orange Pi R1 Plus LTS','x86-64','HG680P','B860H-V5','AT01','B860H-V1-V2']" >> $GITHUB_OUTPUT
+              ;;
+            "AT01_HG680P")
+              echo "target=['AT01','HG680P']" >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
+              ;;
+           esac
   build:
     needs: prebuild
     runs-on: ubuntu-24.04
@@ -137,8 +179,25 @@ jobs:
         target: ${{fromJSON(needs.prebuild.outputs.target)}}
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
+
+      # Notif saat mulai build
+      - name: Notify Start Build
+        run: |
+          DATE=$(date +"%Y-%m-%d %H:%M:%S")
+          MESSAGE="🚀 Build firmware hj-Wrt dimulai...
+          ═══════════════════════
+          🇲🇨 dev      : <b>houjie80</b>
+          📦 Target   : <b>${{ inputs.target }}</b>
+          🌐 Release  : <b>${{ inputs.releases_branch }}</b>
+          🖥 Kernel   : <b>${{ inputs.openwrt_kernel }}</b>
+          ⏰ Tanggal  : <b>$DATE</b>"
+
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d parse_mode="HTML" \
+          --data-urlencode text="$MESSAGE"
 
       - name: Initialization environment (normal)
         # if: github.event.inputs.target != 'all' && !cancelled()
@@ -148,177 +207,548 @@ jobs:
           sudo apt-get -qq update
           sudo apt-get -qq install build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils mkisofs
           sudo apt-get -qq install jq python3 python3-pip
-          pip install telethon
-          pip install colorama
+          #sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
+          # sudo -E systemctl daemon-reload
           sudo timedatectl set-timezone "$TZ"
+          sudo pip3 install gdown
+          sudo pip3 install git+https://github.com/Juvenal-Yescas/mediafire-dl
+          wget https://mega.nz/linux/repo/xUbuntu_24.04/amd64/megacmd-xUbuntu_24.04_amd64.deb && sudo apt install "$PWD/megacmd-xUbuntu_24.04_amd64.deb"
           echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
           echo -e "[\033[94m INFO \033[0m] TARGET: ${{ matrix.target }}"
+          echo "BUILD_DATE=$(date +'%d-%m-%y %H:%M:%S')" >> $GITHUB_ENV
           echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
 
+      
       - name: Setup Environment Variables
         id: init
         run: |
-          if [ "$TARGET" == "Raspberry Pi 3B" ]; then
+         case "$TARGET" in
+          "Raspberry Pi 3B")
             echo "TARGET_NAME=rpi-3" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_rpi-3" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Raspberry Pi 4B" ]; then
+            ;;
+          "Raspberry Pi 4B")
             echo "TARGET_NAME=rpi-4" >> $GITHUB_ENV
             echo "TAG_NAME=openwrt_rpi-4" >> $GITHUB_ENV
-          elif [ "$TARGET" == "NanoPi R2C" ]; then
-            echo "TARGET_NAME=friendlyarm_nanopi-r2c" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_friendlyarm_nanopi-r2c" >> $GITHUB_ENV
-          elif [ "$TARGET" == "NanoPi R2S" ]; then
-            echo "TARGET_NAME=friendlyarm_nanopi-r2s" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_friendlyarm_nanopi-r2s" >> $GITHUB_ENV
-          elif [ "$TARGET" == "NanoPi R4S" ]; then
-            echo "TARGET_NAME=friendlyarm_nanopi-r4s" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_friendlyarm_nanopi-r4s" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Orange Pi R1 Plus" ]; then
-            echo "TARGET_NAME=xunlong_orangepi-r1-plus" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_xunlong_orangepi-r1-plus" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Orange Pi R1 Plus LTS" ]; then
-            echo "TARGET_NAME=xunlong_orangepi-r1-plus-lts" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_xunlong_xunlong_orangepi-r1-plus-lts" >> $GITHUB_ENV
-          elif [ "$TARGET" == "x86-64" ]; then
-            echo "TARGET_NAME=generic" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_generic" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Amlogic HG680P" ]; then
+            ;;
+         "NanoPi R2C")
+           echo "TARGET_NAME=friendlyarm_nanopi-r2c" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_friendlyarm_nanopi-r2c" >> $GITHUB_ENV
+           ;;
+         "NanoPi R2S")
+           echo "TARGET_NAME=friendlyarm_nanopi-r2s" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_friendlyarm_nanopi-r2s" >> $GITHUB_ENV
+           ;;
+         "NanoPi R4S")
+           echo "TARGET_NAME=friendlyarm_nanopi-r4s" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_friendlyarm_nanopi-r4s" >> $GITHUB_ENV
+           ;;
+         "Orange Pi R1 Plus")
+           echo "TARGET_NAME=xunlong_orangepi-r1-plus" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_xunlong_orangepi-r1-plus" >> $GITHUB_ENV
+           ;;
+         "Orange Pi R1 Plus LTS")
+           echo "TARGET_NAME=xunlong_orangepi-r1-plus-lts" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_xunlong_orangepi-r1-plus-lts" >> $GITHUB_ENV
+           ;;
+         "x86-64")
+           echo "TARGET_NAME=generic" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_generic" >> $GITHUB_ENV
+           ;;
+         "HG680P")
+           echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+           echo "openwrt_board=s905x" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_amlogic_s905x" >> $GITHUB_ENV
+           ;;
+         "B860H-V5")
+           echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+           echo "openwrt_board=s905x2-b860h-v5" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_amlogic_s905x-b860h-v5" >> $GITHUB_ENV
+           ;;
+         "B860H-V1-V2")
+           echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+           echo "openwrt_board=s905x-b860h" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_amlogic_s905x-b860h" >> $GITHUB_ENV
+           ;;
+         "AT01")
+           echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+           echo "openwrt_board=s905x4-advan" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_amlogic_s905x4" >> $GITHUB_ENV
+           ;;
+         "HG680-FJ")
+           echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+           echo "openwrt_board=s905x2-hg680-fj" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_amlogic_s905x2-hg680-fj" >> $GITHUB_ENV
+           ;;
+         "Amlogic s905 MXQ-Pro+")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
-            echo "openwrt_board=s905x" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_amlogic_s905x" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Amlogic B860H-V5" ]; then
+            echo "openwrt_board="s905-mxqpro-plus" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;
+         "Amlogic s905 Beelink-Mini")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
-            echo "openwrt_board=s905x-b860h" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_amlogic_s905x-b860h" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Amlogic B860H-V1-V2" ]; then
+            echo "openwrt_board="s905-beelink-mini" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;
+         "Amlogic s905d Phicomm-N1")
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
-            echo "openwrt_board=s905x2" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_amlogic_s905x2" >> $GITHUB_ENV
-          fi
-          echo "status=success" >> ${GITHUB_OUTPUT}
-          echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
+            echo "openwrt_board="s905d" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;
+         "Amlogic s905l B860AV2")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905l" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;
+         "Amlogic s905l Mibox-4")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905l-mg101" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "Amlogic s905l2 M301A")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905l2" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;
+         "Amlogic s905l2 MGV-M301A")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905l2" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "Amlogic s905l3 HG680-LC")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905l3" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "Amlogic s905l3a B863AV3")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905l3a-m401a" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "Amlogic s905l3b MGV2000")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905l3b-e900v22e" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "Amlogic s905lb Q96-Mini")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905lb-q96-mini" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "Amlogic s905w TX3-Mini")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905w" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "Amlogic s905w X96-Mini")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905w-x96-mini" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;
+         "Amlogic s912 Nexbox-A95X-A2")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s912-nexbox-a2" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "Amlogic s912 Nexbox-A1-A95X")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s912-nexbox-a1" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "Amlogic s905x3 X96Max+_1Gb")
+           echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905x3-x96max" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "Amlogic s905x3 X96Max+_100Mb")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905x3" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "Amlogic s905x3 X96Air_1Gb")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905x3-x96air-gb" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "Amlogic s905x3 X96Air_100mb")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905x3-x96air" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "Amlogic s905x3 HK1-Vontar-X3")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905x3-hk1" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;
+         "Amlogic s905x2 X96Max-v4Gb")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905x2" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "Amlogic s905x2 X96Max-v4Gb")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905x2" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "Amlogic s905x2 X96Max-v2Gb")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s905x2-x96max-2g" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "RK3588 Rock5B")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="rock5b" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;
+         "RK3399 King3399")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="king3399" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "RK3566 Panther-X2")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="panther-x2" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "RK3528 H96-Max-M2")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="h96-max-m2" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "RK3318-BOX")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="rk3318-box" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "Firefly-RK3328")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="renegade-rk3328" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;     
+         "Amlogic s922x GT-King-Pro")
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board="s922x" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic" >> $GITHUB_ENV
+           ;;
+         esac
+
+         echo "status=success" >> ${GITHUB_OUTPUT}
+         echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
+         
+      - name: Set ENV (VEROP & ARCH_3)
+        run: |
+          TARGET_NAME="${{ env.TARGET_NAME }}"
+          RELEASES_BRANCH="${{ inputs.releases_branch }}"
+          RELEASES_TAG="${RELEASES_BRANCH/:/_}"
+          RELEASES_TAG2="${RELEASES_BRANCH#*:}"
+        
+          VEROP="$(echo "${RELEASES_TAG2}" | awk -F. '{print $1"."$2}')"
+          echo "VEROP=$VEROP" >> $GITHUB_ENV
+          echo "RELEASES_TAG=$RELEASES_TAG" >> $GITHUB_ENV
+          echo "RELEASES_TAG2=$RELEASES_TAG2" >> $GITHUB_ENV   
+          
+          echo "BASE=${RELEASES_BRANCH%%:*}" >> $GITHUB_ENV
+
+          echo "[✓] RELEASES_TAG  : ${RELEASES_BRANCH/:/_}"
+          echo "[✓] RELEASES_TAG2 : ${RELEASES_BRANCH#*:}"
+          echo "[✓] BASE : ${RELEASES_BRANCH%%:*}"
+          echo "[✓] VEROP : ${VEROP}"
+          
+      - name: Download Custom Packages
+        run: |
+          chmod +x scripts/PACKAGES.sh
+          ./scripts/PACKAGES.sh    
 
 
       - name: Build Rootfs [ ${{ inputs.releases_branch }} ]
         id: imagebuilder
-        if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
+        if: ${{ steps.init.outputs.status == 'success' && inputs.rootfs_url == '' && !cancelled() }}
         run: |
           echo -e "[\033[95m STEPS \033[0m] Building Firmware And Rootfs"
-          TARGET_NAME="${{ env.TARGET_NAME }}"
-          RELEASES_BRANCH="${{ inputs.releases_branch }}"${RELEASES_BRANCH%:*}
+          export OPENWRT_KERNEL="${{ inputs.openwrt_kernel }}"
           chmod +x ${IMAGEBUILDER_SH}
-          bash ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} "${{ env.TARGET_NAME }}"
-          echo "RELEASES_TAG=${RELEASES_BRANCH/:/_}" >> ${GITHUB_ENV}
+          bash ${{ env.IMAGEBUILDER_SH }} ${{ inputs.releases_branch }} "${{ env.TARGET_NAME }}" "${{ inputs.tunnel_option }}"
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
-  
+          
+      - name: Download file ${{ github.event.inputs.type_file }}
+        if: ${{ inputs.rootfs_url != '' }}
+        run: |
+         mkdir -p build
+
+          echo "[🔍] Mendeteksi sumber dari: ${{ github.event.inputs.rootfs_url }}"
+
+         if echo "${{ github.event.inputs.rootfs_url }}" | grep -q "drive."; then
+         echo "[🌐] Sumber: Google Drive"
+         if echo "${{ github.event.inputs.rootfs_url }}" | awk -F "/" '{print $6}' | grep -q .; then
+         link_gdrive=$(echo "${{ github.event.inputs.rootfs_url }}" | awk -F "/" '{print $6}')
+          else
+         link_gdrive=$(echo "${{ github.event.inputs.rootfs_url }}" | awk -F "/" '{print $4}' | awk -F "?id=" '{print $2}' | awk -F "&export" '{print $1}')
+         fi
+         echo "[⬇️] Mengunduh dari Google Drive: ID $link_gdrive"
+         sudo gdown "$link_gdrive" -O build/file.${{ github.event.inputs.type_file }}
+
+         elif echo "${{ github.event.inputs.rootfs_url }}" | grep -q "mediafire.com"; then
+         echo "[🌐] Sumber: MediaFire"
+         echo "[⬇️] Mengunduh dari MediaFire: ${{ github.event.inputs.rootfs_url }}"
+         sudo mediafire-dl "${{ github.event.inputs.rootfs_url }}" -o build/file.${{ github.event.inputs.type_file }}
+
+         elif echo "${{ github.event.inputs.rootfs_url }}" | grep -q "mega.nz"; then
+         echo "[🌐] Sumber: MEGA.nz"
+         echo "[⬇️] Mengunduh dari MEGA: ${{ github.event.inputs.rootfs_url }}"
+         file_mega=$(sudo mega-get "${{ github.event.inputs.rootfs_url }}" | awk -F: '{print $2}')
+         sudo mv "${file_mega}" "build/file.${{ github.event.inputs.type_file }}"
+
+         else
+          echo "[🌐] Sumber: URL langsung"
+          echo "[⬇️] Mengunduh dari URL: ${{ github.event.inputs.rootfs_url }}"
+          sudo wget --no-check-certificate "${{ github.event.inputs.rootfs_url }}" -O build/file.${{ github.event.inputs.type_file }}
+         fi
+
+         echo "[✅] File berhasil diunduh ke build/file.${{ github.event.inputs.type_file }}"
+
+      - name: Extract & Inject rootfs
+        id: extract
+        if: ${{ inputs.rootfs_url != '' }}
+        run: |
+          set -e
+          echo "[🔍] Deteksi file: ${{ inputs.type_file }}"
+          mkdir -p imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}
+          cd build
+
+          case "${{ inputs.type_file }}" in
+          img.gz)
+          echo "[🗜] Ekstrak GZIP image..."
+          mkdir -p boot rootfs img
+          gunzip file.img.gz
+          los=$(sudo losetup -fP --show file.img)
+          sudo mount ${los}p2 rootfs
+          echo "[🗂] Inject files/ ke rootfs..."
+           [ -d ../files ] && sudo cp -a ../files/* rootfs/ || true
+           (cd rootfs && sudo tar cfz ../../imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz .)
+          sudo umount rootfs
+          sudo losetup -d $los
+          ;;
+          img.xz)
+          echo "[🗜] Ekstrak XZ image..."
+          mkdir -p boot rootfs img
+          unxz file.img.xz
+          los=$(sudo losetup -fP --show file.img)
+          sudo mount ${los}p2 rootfs
+          echo "[🗂] Inject files/ ke rootfs..."
+          [ -d ../files ] && sudo cp -a ../files/* rootfs/ || true
+          (cd rootfs && sudo tar cfz ../../imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz .)
+          sudo umount rootfs
+          sudo losetup -d $los
+          ;;
+          tar.gz)
+          echo "[📦] Menggunakan file tar.gz langsung..."
+           cp file.tar.gz ../rootfs.tar.gz
+           mkdir rootfs
+           tar -xzf ../rootfs.tar.gz -C rootfs
+           echo "[🗂] Inject files/ ke rootfs..."
+           [ -d ../files ] && cp -a ../files/* rootfs/ || true
+           (cd rootfs && tar cfz ../../imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz .)
+          ;;
+          *)
+          echo "[❌] Jenis file tidak dikenal: ${{ inputs.type_file }}"
+          exit 1
+           ;;
+          esac
+
+          echo "[✅] File rootfs siap di folder imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/"
+
+          
       - name: Clear server space
         if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
         run: |
-          cd imagebuilder
-          rm -rf $(ls . | grep -v "^bin$" | xargs) 2>/dev/null
-          df -hT ${PWD}
+         cd imagebuilder
+         echo "[INFO] Membersihkan direktori imagebuilder (kecuali bin/)"
+         find . -mindepth 1 -maxdepth 1 ! -name 'bin' -exec rm -rf {} +
+         echo "[✓] Ruang setelah pembersihan:"
+         df -hT ${PWD}
 
       - name: Prepare file First
         run: |
           cd imagebuilder
+          shopt -s nullglob
           echo -e "[\033[95m STEPS \033[0m] Prepare File.."
-          mkdir -p compiled_images_${{ env.TAG_NAME }}
-          if [[ "${{ env.TARGET_NAME }}" != "amlogic" ]]; then
-            for file in bin/targets/*/*/*.img.gz; do mv "$file" compiled_images_${{ env.TAG_NAME }}; done
+          mkdir -p compiled_images/mod
+
+          if [[ "${{ env.TARGET_NAME }}" == "amlogic" ]]; then
+            for file in bin/targets/*/*/*rootfs.tar.gz; do
+              if [ -f "$file" ]; then
+                base="$(basename "$file" -rootfs.tar.gz | sed 's/^openwrt/HOUJIE-WRT/')"
+                new_name="${base}_${{ env.TUNNEL_OPTION }}-rootfs.tar.gz"
+                mv "$file" compiled_images/$new_name
+              fi
+            done
           else
-            for file in bin/targets/*/*/*rootfs.tar.gz; do mv "$file" compiled_images_${{ env.TAG_NAME }}; done
+            for file in bin/targets/*/*/*.img.gz; do
+              if [ -f "$file" ]; then
+                base="$(basename "$file" .img.gz | sed 's/^openwrt/HOUJIE-WRT/')"
+                new_name="${base}_${{ env.TUNNEL_OPTION }}.img.gz"
+                mv "$file" compiled_images/$new_name
+              fi
+            done
           fi
-          echo -e "INFO files list: \n$(ls -l compiled_images_${{ env.TAG_NAME }} 2>/dev/null)"
+
+          echo -e "\n[INFO] Files in compiled_images:"
+          ls -lh compiled_images || true
 
       - name: Packaging OpenWrt For Amlogic
+        id: repack
         run: |
           cd imagebuilder
           if [[ "${{ env.TARGET_NAME }}" == "amlogic" ]]; then
             echo -e "[\033[95m STEPS \033[0m] Cloning Ophub Repacking Amlogic"
-            git clone --depth 1 https://github.com/ophub/amlogic-s9xxx-openwrt.git ophub_builder
-            mkdir -p ophub_builder/openwrt-armvirt
-            cp -f compiled_images_${{ env.TAG_NAME }}/*rootfs.tar.gz ophub_builder/openwrt-armvirt/
+            git clone --depth 1 https://github.com/tes-rep/amlogic-s9xxx-openwrt.git ophub_builder
+            mkdir -p ophub_builder/openwrt-armsr
+            cp -f compiled_images/*rootfs.tar.gz ophub_builder/openwrt-armsr/
             cd ophub_builder
-            sudo ./remake -b ${{ env.openwrt_board }} -k 6.6.y -s ${{ inputs.rootfs_size }}
-            for file in openwrt/out/*.img.gz; do cp -f "$file" ../compiled_images_${{ env.TAG_NAME }}; done
-           # for file in openwrt/out/*.img.gz; do cp -f "$file" ${PWD}/build; done
+            sudo ./remake -b ${{ env.openwrt_board }} -k ${{ inputs.openwrt_kernel }} -s ${{ inputs.rootfs_size }}
+            for file in openwrt/out/*.img.gz; do cp -f "$file" ../compiled_images; done
           fi
+          echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Extract firmware
-        id: extract
-        run: |  
-             cd imagebuilder/compiled_images_${{ env.TAG_NAME }}
-             sudo mkdir -p boot rootfs img
-             if [ ${{ github.event.inputs.type_file }} = "img.gz" ]; then
-             sudo gunzip *.img.gz
-             else
-             sudo unxz *.img.xz
-             fi
-             los=$(sudo losetup -fP --show *.img)
-             sudo mount ${los}p2 rootfs
-             (cd rootfs && sudo tar cfz /home/runner/work/Wrt-kombi/Wrt-kombi/rootfs/${{ inputs.rename_rootfs }}.tar.gz *)
+      
+      - name: Prepare Before Uploads
+        id: prepare2
+        if: steps.repack.outputs.status == 'success'
+        run: |
+          cd imagebuilder
+          echo -e "${MSG_STEPS} Replace Name"
+          search_replace_patterns=(
+              "bcm27xx-bcm2710-rpi-3|Raspberry-Pi-3_ext4-sysupgrade"
+              "bcm27xx-bcm2711-rpi-4|Raspberry-Pi-4_ext4-sysupgrade"
+              "rockchip-armv8-friendlyarm_nanopi-r2c|NanoPi_R2C_ext4-sysupgrade"
+              "rockchip-armv8-friendlyarm_nanopi-r2s|NanoPi_R2S_ext4-sysupgrade"
+              "rockchip-armv8-friendlyarm_nanopi-r4s|NanoPi_R4S_ext4-sysupgrade"
+              "rockchip-armv8-xunlong_orangepi-r1-plus|Orange-Pi-R1_ext4-sysupgrade"
+              "rockchip-armv8-xunlong_orangepi-r1-plus-lts|Orange-Pi-R1-Plus-LTS_ext4-sysupgrade"
+              "x86-64-generic-ext4-combined-efi|x86-64-Generic_ext4-combined-efi"
+              "x86-64-generic-ext4-combined|x86-64-Generic_ext4-combined"
+              "_amlogic_s905x_|Amlogic_HG680P"
+              "_amlogic_s905x-b860h_|Amlogic_B860HV1-V2"
+              "_amlogic_s905x2_|Amlogic_B860HV5"
+              "_amlogic_s905x4-advan_|s905x4-advan"
+              "_amlogic_s905x2-hg680-fj_|amlogic_s905x2-hg680-fj"
+              "_amlogic_|amlogic_"
+          )       
+          for pattern in "${search_replace_patterns[@]}"; do
+              search="${pattern%%|*}"
+              replace="${pattern##*|}"
 
-      - name: Mengatur tanggal
-        id: date
-        run: echo "date=$(date +'%d-%m-%y %H:%M:%S')" >> $GITHUB_OUTPUT
+           # Process .img.gz files
+          for file in compiled_images/*${search}*.img.gz; do
+                  [[ -f "$file" ]] || continue
+                  kernel=""
+                  if [[ "$file" =~ k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)? ]]; then
+                  kernel="${BASH_REMATCH[0]}"
+                  echo "kernel=$kernel" >> $GITHUB_ENV
+            fi
+             new_name="HOUJIE-WRT_${RELEASES_TAG2}_${replace}_${kernel}_${TUNNEL_OPTION}.img.gz"
+            echo -e "${INFO} Renaming: $file → $new_name"
+            cp "$file" "compiled_images/mod/$new_name" || echo -e "${WARNING} Failed to rename $file"
+           done
+
+           # Process .tar.gz files
+           for file in compiled_images/*${search}*.tar.gz; do
+            [[ -f "$file" ]] || continue
+             new_name="HOUJIE-WRT_${{ env.RELEASES_TAG2 }}_${replace}.tar.gz"
+            echo -e "${INFO} Renaming: $file → $new_name"
+            cp "$file" "compiled_images/mod/$new_name" || echo -e "${WARNING} Failed to rename $file"
+           done
+           done
+          echo "status=success" >> ${GITHUB_OUTPUT}
+          echo -e "${MSG_SUCCESS} Status: Success"
+          echo -e "INFO files list: \n$(ls -l compiled_images 2>/dev/null)"
+          echo -e "INFO files list (compiled_images/mod): \n$(ls -l compiled_images/mod 2>/dev/null)"
+          
+      - name: Mod SDCard  
+        id: modsdcard
+        if: steps.prepare2.outputs.status == 'success'
+        run: |
+          chmod +x scripts/MODSDCARD.sh
+            ./scripts/MODSDCARD.sh
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: List compiled images
+        run: |
+           echo "📂 Files in compiled_images/"
+           ls -lh imagebuilder/compiled_images || true
+           echo
+           echo "📂 Files in compiled_images/mod/"
+           ls -lh imagebuilder/compiled_images/mod || true
+
+      - name: Upload the packaged OpenWrt
+        uses: ncipollo/release-action@main
+        if: ${{ steps.modsdcard.outputs.status }} == 'success' && !cancelled()
+        with:
+          tag: HOUJIE-Wrt_${{ env.BASE }}_${{ env.openwrt_board }}
+          artifacts: |
+            imagebuilder/compiled_images/*.tar.gz
+            imagebuilder/compiled_images/mod/*.img.gz
+          allowUpdates: true
+          removeArtifacts: false
+          replacesArtifacts: true
+          prerelease: ${{ inputs.upload-prerelease }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body: |
+            ### OpenWrt Image information
+            - Default IP: 192.168.1.1
+            - Default username: root
+            - Default password: sijitekowolu
+            - Default WIFI name: NOKIA N73 | NOKIA N73_5G
+            - Default WIFI password: sijitekowolu
+            ###   Firmware Details : 
+              - Tanggal Build: ${{ env.BUILD_DATE }}
+              - Devices type : ${{ inputs.target }}
+              - Kernel version : ${{ inputs.openwrt_kernel }}
+              - Kernel Version (Parsed) : ${{ env.kernel }}
+              - ROOTFS File : ${{ inputs.releases_branch }}
+              - ROOTFS Size : ${{ inputs.rootfs_size }}
+              - tunnel : ${{ inputs.tunnel_option }}
+
+      - name: Dummy Build
+        run: |
+          echo "Building firmware..."
+          sleep 5
+          # Simulasi sukses, kalau mau coba gagal: exit 1
+          echo "Build selesai"
+      - name: Notify Success Build
+        if: success()
+        run: |
+          DATE=$(date +"%Y-%m-%d %H:%M:%S")
+          MESSAGE="✅ Build firmware selesai!
+          ═══════════════════════
+          🇲🇨 dev      : <b>houjie80</b>
+          📦 Target   : <b>${{ inputs.target }}</b>
+          🌐 Release  : <b>${{ inputs.releases_branch }}</b>
+          🖥 Kernel   : <b>${{ inputs.openwrt_kernel }}</b>
+          ⏰ Tanggal  : <b>$DATE</b>
+          🔗 Unduh    : <a href=\"${DOWNLOAD_URL}\">Klik di sini</a>"
+
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d parse_mode="HTML" \
+          --data-urlencode text="$MESSAGE"
+
+      - name: Notify Failure Build
+        if: failure()
+        run: |
+          DATE=$(date +"%Y-%m-%d %H:%M:%S")
+          MESSAGE="❌ Build firmware gagal!
+          ═══════════════════════
+          🇲🇨 dev      : <b>houjie80</b>
+          📦 Target   : <b>${{ inputs.target }}</b>
+          🌐 Release  : <b>${{ inputs.releases_branch }}</b>
+          🖥 Kernel   : <b>${{ inputs.openwrt_kernel }}</b>
+          ⏰ Tanggal  : <b>$DATE</b>
+          🔗 Unduh    : <a href=\"${DOWNLOAD_URL}\">Klik di sini</a>"
+
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d parse_mode="HTML" \
+          --data-urlencode text="$MESSAGE"
    
-      - name: Building OpenWrt
-        run: |
-          sudo chmod +x ulo2
-          sudo chmod +x ulo
-          sudo ./${{ inputs.versi }} -m ${{ inputs.devices }} -k ${{ inputs.kernel }} -s ${{ inputs.rootfs_size }}
-          
-      - name: Creating Package Artifact
-        run: |
-          mkdir -p ./artifact
-          cp -rf ./out/${{ inputs.devices }}/* ./artifact/
-          cp -rf ./rootfs/*.tar.gz ./artifact/
-          
-      - name: Delivering Package
-        uses: actions/upload-artifact@v3
-        with:
-          name: openwrt_package
-          path: ./artifact/*
-          
-      - name: Upload release asset
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./artifact/*
-          tag: ${{ inputs.devices }}
-          file_glob: true
-          overwrite: true
-          body: |
-            ##  OpenWRT Release for ${{ inputs.devices }} devices
-            ULO-Builder Release from Github Workflow
-            ### OpenWrt Image Information
-            - Firmware Details : 
-              - Tanggal Build: ${{ steps.date.outputs.date }}
-              - Devices type : ${{ inputs.devices }}
-              - Kernel version : ${{ inputs.kernel }}
-              - ROOTFS File : ${{ inputs.rename_rootfs }}
-              - ROOTFS Size : ${{ inputs.rootfs_size }}
-            - Firmware Information : 
-              - 
-      - name: Retry Upload if Failed
-        if: ${{ failure() }}
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./artifact/*
-          tag: ${{ inputs.devices }}
-          file_glob: true
-          overwrite: true
-          body: |
-            ##  OpenWRT Release for ${{ inputs.devices }} devices
-            ULO-Builder Release from Github Workflow
-            ### OpenWrt Image Information
-            - Firmware Details : 
-              - Tanggal Build: ${{ steps.date.outputs.date }}
-              - Devices type : ${{ inputs.devices }}
-              - Kernel version : ${{ inputs.kernel }}
-              - ROOTFS File : ${{ inputs.rename_rootfs }}
-              - ROOTFS Size : ${{ inputs.rootfs_size }}
-            - Firmware Information : 
-              - 
