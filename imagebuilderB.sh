@@ -452,5 +452,6 @@ custom_files
 rebuild_firmware
 
 echo -e "${SUCCESS} Semua proses selesai."
+echo -e "${INFO} Sumber: ${op_sourse}, Cabang: ${op_branch}, Target: ${op_target}, tunnel; ${TUNNEL_OPTION}, profile; ${target_profile}"
 echo -e "Penggunaan ruang server setelah kompilasi:\n$(df -hT "${make_path}")\n"
 exit 0
