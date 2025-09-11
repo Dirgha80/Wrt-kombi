@@ -122,7 +122,7 @@ download_imagebuilder() {
 
     case "${op_target}" in
         amlogic|AMLOGIC)
-            target_profile=""
+            target_profile="generic"
             target_system="armsr/armv8"
             target_name="armsr-armv8"
             ARCH_3="aarch64_generic"
