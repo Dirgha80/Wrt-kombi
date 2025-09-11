@@ -292,7 +292,7 @@ jobs:
           echo "[✓] RELEASES_TAG  : ${RELEASES_BRANCH/:/_}"
           echo "[✓] RELEASES_TAG2 : ${RELEASES_BRANCH#*:}"
           echo "[✓] BASE : ${RELEASES_BRANCH%%:*}"
-          echo "[✓] VEROP : ${RELEASES_TAG2}"
+          echo "[✓] VEROP : ${VEROP}"
           
       - name: Download Custom Packages
         run: |
