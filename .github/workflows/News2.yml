@@ -280,36 +280,7 @@ jobs:
           echo "VEROP=$VEROP" >> $GITHUB_ENV
           echo "RELEASES_TAG=$RELEASES_TAG" >> $GITHUB_ENV
           echo "RELEASES_TAG2=$RELEASES_TAG2" >> $GITHUB_ENV   
-          case "${TARGET_NAME}" in
-            amlogic|AMLOGIC)
-                ARCH_3="aarch64_generic"
-                ;;
-            rpi-3)
-                ARCH_3="aarch64_cortex-a53"
-                ;;
-            rpi-4)
-                ARCH_3="aarch64_cortex-a72"
-                ;;
-            friendlyarm_nanopi-r2c|nanopi-r2c)
-                ARCH_3="aarch64_generic"
-                ;;
-            friendlyarm_nanopi-r2s|nanopi-r2s)
-                ARCH_3="aarch64_generic"
-                ;;
-            friendlyarm_nanopi-r4s|nanopi-r4s)
-                ARCH_3="aarch64_generic"
-                ;;
-            xunlong_orangepi-r1-plus|orangepi-r1-plus)
-                ARCH_3="aarch64_generic"
-                ;;
-            xunlong_orangepi-r1-plus-lts|orangepi-r1-plus-lts)
-                ARCH_3="aarch64_generic"
-                ;;
-            generic|x86-64|x86_64)
-                ARCH_3="x86_64"
-                ;;
-          esac
-          echo "ARCH_3=$ARCH_3" >> $GITHUB_ENV
+          
           echo "BASE=${RELEASES_BRANCH%%:*}" >> $GITHUB_ENV
 
           echo "[✓] RELEASES_TAG  : ${RELEASES_BRANCH/:/_}"
