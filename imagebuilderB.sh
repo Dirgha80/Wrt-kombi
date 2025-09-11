@@ -442,7 +442,7 @@ op_branch="${1#*:}"
 op_target="${2}"
 TUNNEL_OPTION="${3}"
 
-echo -e "${INFO} Sumber: ${op_sourse}, Cabang: ${op_branch}, Target: ${op_target}"
+echo -e "${INFO} Sumber: ${op_sourse}, Cabang: ${op_branch}, Target: ${op_target}, tunnel; ${TUNNEL_OPTION}"
 echo -e "${INFO} Penggunaan ruang server sebelum kompilasi:\n$(df -hT "${make_path}")\n"
 
 download_imagebuilder
