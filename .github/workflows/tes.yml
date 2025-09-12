@@ -59,7 +59,7 @@ on:
           - s905x3 X96Air_100mb
           - s905x3 X96Air_1Gb
           - s905x3 X96Max+_100Mb
-          - s905x3 X6Max+_1Gb
+          - s905x3 X96Max+_1Gb
           - s912 Nexbox-A1-A95X
           - s912 Nexbox-A95X-A2
           - s922x GT-King-Pro
