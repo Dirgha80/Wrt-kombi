@@ -183,7 +183,7 @@ jobs:
               targets="['NanoPi R2C','NanoPi R2S','NanoPi R4S']"
               ;;
             "AT01_HG680P")
-              target=['AT01','HG680P']"
+              targets="['AT01','HG680P']"
               ;;  
             *)
               targets="['${{ inputs.target }}']"
