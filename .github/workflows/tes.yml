@@ -639,7 +639,7 @@ jobs:
           search_replace_patterns=(
               "_amlogic_s905x_|Amlogic_HG680P"
               "_amlogic_s905x-b860h_|Amlogic_B860HV1-V2"
-              "_amlogic_s905x2_|Amlogic_B860HV5"
+              "_amlogic_s905x2-b860h-v5_|Amlogic_B860HV5"
               "_amlogic_s905x4-advan_|s905x4-advan"
               "_amlogic_s905x2-hg680-fj_|amlogic_s905x2-hg680-fj"
           )       
