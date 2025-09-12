@@ -651,7 +651,6 @@ jobs:
               "_amlogic_s905x2_|Amlogic_B860HV5"
               "_amlogic_s905x4-advan_|s905x4-advan"
               "_amlogic_s905x2-hg680-fj_|amlogic_s905x2-hg680-fj"
-              "_amlogic_|amlogic_"
           )       
           for pattern in "${search_replace_patterns[@]}"; do
               search="${pattern%%|*}"
@@ -739,7 +738,7 @@ jobs:
         uses: ncipollo/release-action@main
         if: success()
         with:
-          tag: HOUJIE-Wrt_${{ inputs.releases_branch }}_all
+          tag: HOUJIE-Wrt_all
           artifacts: 'final_release/*'
           allowUpdates: true
           replacesArtifacts: true
