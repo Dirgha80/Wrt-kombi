@@ -194,7 +194,7 @@ main() {
     local builds=()
 
     case "$TARGET" in
-      "HG680P")
+      "HG680P-MOD")
         builds=(
           "_s905x_k5.15.*:meson-gxl-s905x-p212.dtb:HG680P"
           "_s905x_k6.1.*:meson-gxl-s905x-p212.dtb:HG680P"
@@ -202,7 +202,7 @@ main() {
           "_s905x_k6.12.*:meson-gxl-s905x-p212.dtb:HG680P"
         )
         ;;
-      "B860H-V1-V2")
+      "B860H-MOD")
         builds=(
           "_s905x-b860h_k5.15.*:meson-gxl-s905x-b860h.dtb:B860H"
           "_s905x-b860h_k6.1.*:meson-gxl-s905x-b860h.dtb:B860H"
