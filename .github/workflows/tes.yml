@@ -629,10 +629,18 @@ jobs:
           fi
           echo "status=success" >> $GITHUB_OUTPUT
 
+      - name: Mod SDCard  
+        id: modsdcard
+        if: steps.repack.outputs.status == 'success'
+        run: |
+          chmod +x scripts/MODSDCARD.sh
+            ./scripts/MODSDCARD.sh
+          echo "status=success" >> $GITHUB_OUTPUT    
+
       
       - name: Prepare Before Uploads
         id: prepare2
-        if: steps.repack.outputs.status == 'success'
+        if: steps.modsdcard.outputs.status == 'success'
         run: |
           cd imagebuilder
           echo -e "${MSG_STEPS} Replace Name"
@@ -657,7 +665,7 @@ jobs:
             fi
              new_name="HOUJIE-WRT_${RELEASES_TAG2}_${replace}_${kernel}_${TUNNEL_OPTION}.img.gz"
             echo -e "${INFO} Renaming: $file → $new_name"
-            cp "$file" "compiled_images/mod/$new_name" || echo -e "${WARNING} Failed to rename $file"
+            mv "$file" "compiled_images/mod/$new_name" || echo -e "${WARNING} Failed to rename $file"
            done
 
            # Process .tar.gz files
@@ -665,7 +673,7 @@ jobs:
             [[ -f "$file" ]] || continue
              new_name="HOUJIE-WRT_${{ env.RELEASES_TAG2 }}_${replace}.tar.gz"
             echo -e "${INFO} Renaming: $file → $new_name"
-            cp "$file" "compiled_images/mod/$new_name" || echo -e "${WARNING} Failed to rename $file"
+            mv "$file" "compiled_images/mod/$new_name" || echo -e "${WARNING} Failed to rename $file"
            done
            done
           echo "status=success" >> ${GITHUB_OUTPUT}
@@ -673,13 +681,7 @@ jobs:
           echo -e "INFO files list: \n$(ls -l compiled_images 2>/dev/null)"
           echo -e "INFO files list (compiled_images/mod): \n$(ls -l compiled_images/mod 2>/dev/null)"
           
-      - name: Mod SDCard  
-        id: modsdcard
-        if: steps.prepare2.outputs.status == 'success'
-        run: |
-          chmod +x scripts/MODSDCARD.sh
-            ./scripts/MODSDCARD.sh
-          echo "status=success" >> $GITHUB_OUTPUT
+      
 
       - name: List compiled images
         run: |
