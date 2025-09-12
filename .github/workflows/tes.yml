@@ -183,7 +183,7 @@ jobs:
               targets="['NanoPi R2C','NanoPi R2S','NanoPi R4S']"
               ;;
             "AT01_HG680P")
-              targets="['AT01','HG680P']"
+              targets="['AT01','HG680P','HG680-FJ','B860H-V1-V2','B860H-V5']"
               ;;  
             *)
               targets="['${{ inputs.target }}']"
@@ -637,15 +637,6 @@ jobs:
           cd imagebuilder
           echo -e "${MSG_STEPS} Replace Name"
           search_replace_patterns=(
-              "bcm27xx-bcm2710-rpi-3|Raspberry-Pi-3_ext4-sysupgrade"
-              "bcm27xx-bcm2711-rpi-4|Raspberry-Pi-4_ext4-sysupgrade"
-              "rockchip-armv8-friendlyarm_nanopi-r2c|NanoPi_R2C_ext4-sysupgrade"
-              "rockchip-armv8-friendlyarm_nanopi-r2s|NanoPi_R2S_ext4-sysupgrade"
-              "rockchip-armv8-friendlyarm_nanopi-r4s|NanoPi_R4S_ext4-sysupgrade"
-              "rockchip-armv8-xunlong_orangepi-r1-plus|Orange-Pi-R1_ext4-sysupgrade"
-              "rockchip-armv8-xunlong_orangepi-r1-plus-lts|Orange-Pi-R1-Plus-LTS_ext4-sysupgrade"
-              "x86-64-generic-ext4-combined-efi|x86-64-Generic_ext4-combined-efi"
-              "x86-64-generic-ext4-combined|x86-64-Generic_ext4-combined"
               "_amlogic_s905x_|Amlogic_HG680P"
               "_amlogic_s905x-b860h_|Amlogic_B860HV1-V2"
               "_amlogic_s905x2_|Amlogic_B860HV5"
@@ -700,14 +691,14 @@ jobs:
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
-        if: success() && env.TARGET_NAME != 'amlogic'
+        if: success() && inputs.target != 'AT01_HG680P'
         with:
           name: compiled-${{ matrix.target }}
           path: imagebuilder/compiled_images/*.img.gz
 
       - name: Upload Artifacts img
         uses: actions/upload-artifact@v4
-        if: success() && env.TARGET_NAME == 'amlogic'
+        if: success() && inputs.target == 'AT01_HG680P'
         with:
           name: ${{ matrix.target }}-mod
           path: imagebuilder/compiled_images/mod/*.img.gz
