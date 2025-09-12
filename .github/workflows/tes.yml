@@ -701,35 +701,47 @@ jobs:
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
+        if: success() && !cancelled()
         with:
           name: compiled-${{ matrix.target }}
-          path: imagebuilder/compiled_images/*.img.gz    
+          path: imagebuilder/compiled_images/*.img.gz
 
       - name: Upload Artifacts img
         uses: actions/upload-artifact@v4
+        if: success() && !cancelled()
         with:
-          name: ${{ matrix.target }}
-          path: imagebuilder/compiled_images/mod/*.img.gz   
+          name: ${{ matrix.target }}-mod
+          path: imagebuilder/compiled_images/mod/*.img.gz
 
+  
   release:
     needs: build
     runs-on: ubuntu-latest
+    if: always()
     steps:
-      - name: Download All Artifacts
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: imagebuilder/compiled_images_all          
+          path: artifacts
 
-      - name: Upload the packaged OpenWrt
+      - name: List downloaded files
+        run: |
+          echo "Files downloaded to 'artifacts' directory:"
+          ls -R artifacts
+
+      - name: Prepare a single directory for upload
+        run: |
+          mkdir -p final_release
+          find artifacts -type f -name "*.img.gz" -exec mv {} final_release/ \;
+          find artifacts -type f -name "*.tar.gz" -exec mv {} final_release/ \;
+
+      - name: Upload the packaged OpenWrt to a single release
         uses: ncipollo/release-action@main
-        if: ${{ steps.modsdcard.outputs.status }} == 'success' && !cancelled()
+        if: success()
         with:
-          tag: HOUJIE-Wrt_${{ env.BASE }}
-          artifacts: |
-            imagebuilder/compiled_images/*
-            imagebuilder/compiled_images/mod/*.img.gz
+          tag: HOUJIE-Wrt_${{ inputs.releases_branch }}_all
+          artifacts: 'final_release/*'
           allowUpdates: true
-          removeArtifacts: false
           replacesArtifacts: true
           prerelease: ${{ inputs.upload-prerelease }}
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -740,7 +752,7 @@ jobs:
             - Default password: sijitekowolu
             - Default WIFI name: NOKIA N73 | NOKIA N73_5G
             - Default WIFI password: sijitekowolu
-            ###   Firmware Details : 
+            ### Firmware Details :
               - Tanggal Build: ${{ env.BUILD_DATE }}
               - Devices type : ${{ inputs.target }}
               - Kernel version : ${{ inputs.openwrt_kernel }}
