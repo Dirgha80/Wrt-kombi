@@ -699,6 +699,27 @@ jobs:
            echo "📂 Files in compiled_images/mod/"
            ls -lh imagebuilder/compiled_images/mod || true
 
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-${{ matrix.target }}
+          path: imagebuilder/compiled_images/*.img.gz    
+
+      - name: Upload Artifacts img
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-${{ matrix.target }}
+          path: imagebuilder/compiled_images/mod/*.img.gz   
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: imagebuilder/compiled_images_all          
+
       - name: Upload the packaged OpenWrt
         uses: ncipollo/release-action@main
         if: ${{ steps.modsdcard.outputs.status }} == 'success' && !cancelled()
