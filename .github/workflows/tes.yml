@@ -708,7 +708,7 @@ jobs:
       - name: Upload Artifacts img
         uses: actions/upload-artifact@v4
         with:
-          name: compiled-${{ matrix.target }}
+          name: ${{ matrix.target }}
           path: imagebuilder/compiled_images/mod/*.img.gz   
 
   release:
