@@ -705,7 +705,7 @@ jobs:
         with:
           tag: HOUJIE-Wrt_${{ env.BASE }}
           artifacts: |
-            imagebuilder/compiled_images/*.tar.gz
+            imagebuilder/compiled_images/*
             imagebuilder/compiled_images/mod/*.img.gz
           allowUpdates: true
           removeArtifacts: false
