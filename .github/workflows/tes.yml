@@ -310,6 +310,11 @@ jobs:
            echo "openwrt_board=s905x4-advan" >> $GITHUB_ENV
            echo "TAG_NAME=openwrt_amlogic_s905x4" >> $GITHUB_ENV
            ;;
+         "ax810")
+           echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+           echo "openwrt_board=s905x4-ax810" >> $GITHUB_ENV
+           echo "TAG_NAME=openwrt_amlogic_s905x4" >> $GITHUB_ENV
+           ;;  
          "HG680-FJ")
            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
            echo "openwrt_board=s905x2-hg680-fj" >> $GITHUB_ENV
