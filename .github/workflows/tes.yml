@@ -47,6 +47,7 @@ on:
           - B860H-V1-V2
           - B860H-MOD
           - AT01
+          - ax810
           - HG680-FJ
           - s905 MXQ-Pro+
           - s905 Beelink-Mini
@@ -166,11 +167,11 @@ jobs:
           case "${{ inputs.target }}" in
             "all")
               # Tambahkan semua target ke matriks
-              targets="['Raspberry Pi 3B','Raspberry Pi 4B','NanoPi R2C','NanoPi R2S','NanoPi R4S','Orange Pi R1 Plus','Orange Pi R1 Plus LTS','x86-64','HG680P','B860H-V5','B860H-V1-V2','HG680P-MOD','B860H-MOD','AT01','HG680-FJ','s905 MXQ-Pro+','s905 Beelink-Mini','s905lb Q96-Mini','s905w TX3-Mini','s905w X96-Mini','s905l Mibox-4','s905l2 M301A','s905x2 X96Max-v2Gb','s905x2 X96Max-v4Gb','s905x3 HK1-Vontar-X3','s905x3 X96Air_100mb','s905x3 X96Air_1Gb','s905x3 X96Max+_100Mb','s905x3 X96Max+_1Gb','s912 Nexbox-A1-A95X','s912 Nexbox-A95X-A2','s922x GT-King-Pro','RK3318-BOX','Firefly-RK3328','RK3399 King3399']"
+              targets="['Raspberry Pi 3B','Raspberry Pi 4B','NanoPi R2C','NanoPi R2S','NanoPi R4S','Orange Pi R1 Plus','Orange Pi R1 Plus LTS','x86-64','HG680P','B860H-V5','B860H-V1-V2','HG680P-MOD','B860H-MOD','AT01','HG680-FJ','s905 MXQ-Pro+','s905 Beelink-Mini','s905lb Q96-Mini','s905w TX3-Mini','s905w X96-Mini','s905l Mibox-4','s905l2 M301A','s905x2 X96Max-v2Gb','s905x2 X96Max-v4Gb','s905x3 HK1-Vontar-X3','s905x3 X96Air_100mb','s905x3 X96Air_1Gb','s905x3 X96Max+_100Mb','s905x3 X96Max+_1Gb','s912 Nexbox-A1-A95X','s912 Nexbox-A95X-A2','s922x GT-King-Pro','RK3318-BOX','Firefly-RK3328','RK3399 King3399','ax810']"
               ;;
             "all_amlogic")
               # Hanya build target Amlogic
-              targets="['HG680P','B860H-V5','B860H-V1-V2','AT01','HG680-FJ','s905 MXQ-Pro+','s905 Beelink-Mini','s905lb Q96-Mini','s905w TX3-Mini','s905w X96-Mini','s905l Mibox-4','s905l2 M301A','s905x2 X96Max-v2Gb','s905x2 X96Max-v4Gb','s905x3 HK1-Vontar-X3','s905x3 X96Air_100mb','s905x3 X96Air_1Gb','s905x3 X96Max+_100Mb','s905x3 X96Max+_1Gb','s912 Nexbox-A1-A95X','s912 Nexbox-A95X-A2','s922x GT-King-Pro']"
+              targets="['HG680P','B860H-V5','B860H-V1-V2','AT01','HG680-FJ','s905 MXQ-Pro+','s905 Beelink-Mini','s905lb Q96-Mini','s905w TX3-Mini','s905w X96-Mini','s905l Mibox-4','s905l2 M301A','s905x2 X96Max-v2Gb','s905x2 X96Max-v4Gb','s905x3 HK1-Vontar-X3','s905x3 X96Air_100mb','s905x3 X96Air_1Gb','s905x3 X96Max+_100Mb','s905x3 X96Max+_1Gb','s912 Nexbox-A1-A95X','s912 Nexbox-A95X-A2','s922x GT-King-Pro','ax810']"
               ;;
             "all_rockchip")
               # Hanya build target Rockchip
