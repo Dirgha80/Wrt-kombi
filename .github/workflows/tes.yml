@@ -780,6 +780,14 @@ jobs:
           sleep 5
           # Simulasi sukses, kalau mau coba gagal: exit 1
           echo "Build selesai"
+
+       # Hapus artifact setelah berhasil upload ke release
+      - name: Delete all artifacts
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: Openwrt-*
+          failOnError: false
+          
       - name: Notify Success Build
         if: success()
         run: |
