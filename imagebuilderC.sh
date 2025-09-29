@@ -580,7 +580,7 @@ rebuild_firmware() {
     PACKAGES+=" internet-detector luci-app-internet-detector internet-detector-mod-modem-restart vnstat2 vnstati2 netdata luci-app-netmonitor"
 
     # Material Theme
-    PACKAGES+=" luci-theme-material"
+    PACKAGES+=" luci-theme-material luci-app-huawei-hilink"
 
     # PHP8
     PACKAGES+=" php8 php8-fastcgi php8-fpm php8-mod-session php8-mod-ctype php8-mod-fileinfo php8-mod-zip php8-mod-iconv php8-mod-mbstring"
