@@ -259,82 +259,93 @@ jobs:
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
           
       - name: Download file ${{ github.event.inputs.type_file }}
+        id: download
         if: ${{ inputs.rootfs_url != '' }}
         run: |
-         mkdir -p build
+          echo "[🌐] Mengunduh file dari: ${{ inputs.rootfs_url }}"
+          mkdir -p build && cd build
 
-          echo "[🔍] Mendeteksi sumber dari: ${{ github.event.inputs.rootfs_url }}"
+          # Ambil ekstensi dari URL (bagian setelah titik terakhir)
+          url="${{ inputs.rootfs_url }}"
+          fname=$(basename "$url")
+          ext="${fname##*.}"
 
-         if echo "${{ github.event.inputs.rootfs_url }}" | grep -q "drive."; then
-         echo "[🌐] Sumber: Google Drive"
-         if echo "${{ github.event.inputs.rootfs_url }}" | awk -F "/" '{print $6}' | grep -q .; then
-         link_gdrive=$(echo "${{ github.event.inputs.rootfs_url }}" | awk -F "/" '{print $6}')
+          # Tentukan nama file target standar berdasarkan ekstensi
+          if [[ "$fname" == *.img.gz ]]; then
+            target="file.img.gz"
+          elif [[ "$fname" == *.img.xz ]]; then
+            target="file.img.xz"
+          elif [[ "$fname" == *.tar.gz ]]; then
+            target="file.tar.gz"
+          elif [[ "$fname" == *.img.zst ]]; then
+            target="file.img.zst"
           else
-         link_gdrive=$(echo "${{ github.event.inputs.rootfs_url }}" | awk -F "/" '{print $4}' | awk -F "?id=" '{print $2}' | awk -F "&export" '{print $1}')
-         fi
-         echo "[⬇️] Mengunduh dari Google Drive: ID $link_gdrive"
-         sudo gdown "$link_gdrive" -O build/file.${{ github.event.inputs.type_file }}
+            target="file.unknown"
+          fi
 
-         elif echo "${{ github.event.inputs.rootfs_url }}" | grep -q "mediafire.com"; then
-         echo "[🌐] Sumber: MediaFire"
-         echo "[⬇️] Mengunduh dari MediaFire: ${{ github.event.inputs.rootfs_url }}"
-         sudo mediafire-dl "${{ github.event.inputs.rootfs_url }}" -o build/file.${{ github.event.inputs.type_file }}
+          echo "[🧩] Ekstensi terdeteksi: $ext"
+          echo "[⬇️] Menyimpan sebagai: $target"
 
-         elif echo "${{ github.event.inputs.rootfs_url }}" | grep -q "mega.nz"; then
-         echo "[🌐] Sumber: MEGA.nz"
-         echo "[⬇️] Mengunduh dari MEGA: ${{ github.event.inputs.rootfs_url }}"
-         file_mega=$(sudo mega-get "${{ github.event.inputs.rootfs_url }}" | awk -F: '{print $2}')
-         sudo mv "${file_mega}" "build/file.${{ github.event.inputs.type_file }}"
+          # Gunakan wget dengan progress bar dan retry
+          wget -q --show-progress --retry-connrefused --waitretry=3 -O "$target" "$url"
 
-         else
-          echo "[🌐] Sumber: URL langsung"
-          echo "[⬇️] Mengunduh dari URL: ${{ github.event.inputs.rootfs_url }}"
-          sudo wget --no-check-certificate "${{ github.event.inputs.rootfs_url }}" -O build/file.${{ github.event.inputs.type_file }}
-         fi
+          if [ ! -f "$target" ]; then
+            echo "[❌] Gagal mengunduh file dari URL!"
+            exit 1
+          fi
 
-         echo "[✅] File berhasil diunduh ke build/file.${{ github.event.inputs.type_file }}"
+          echo "[✅] File berhasil diunduh: $target"
 
-          
-      - name: Extract firmware
+      - name: Extract firmware (auto-detect)
         id: extract
         if: ${{ inputs.rootfs_url != '' }}
         run: |
-          echo "[🔍] Deteksi file: ${{ inputs.type_file }}"
+          echo "[🔍] Mendeteksi jenis file dari build/file.*"
           mkdir -p imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}
-
           cd build
 
-          if [ "${{ inputs.type_file }}" = "img.gz" ]; then
-          echo "[🗜] Ekstrak GZIP image..."
-          sudo mkdir -p boot rootfs img
-          sudo gunzip file.img.gz
-          los=$(sudo losetup -fP --show file.img)
-          sudo mount ${los}p2 rootfs
-          (cd rootfs && sudo tar cfz ../../imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz .)
-          sudo umount rootfs
-          sudo losetup -d $los
+          FILE=$(ls file.* | head -n1)
+          EXT="${FILE##*.}"
+          echo "[🧩] File terdeteksi: $FILE (ekstensi: $EXT)"
 
-          elif [ "${{ inputs.type_file }}" = "img.xz" ]; then
-           echo "[🗜] Ekstrak XZ image..."
-           sudo mkdir -p boot rootfs img
-           sudo unxz file.img.xz
-           los=$(sudo losetup -fP --show file.img)
-           sudo mount ${los}p2 rootfs
-           (cd rootfs && sudo tar cfz ../../imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz .)
-           sudo umount rootfs
-           sudo losetup -d $los
+          sudo mkdir -p rootfs boot img
 
-          elif [ "${{ inputs.type_file }}" = "tar.gz" ]; then
-           echo "[📦] Menggunakan file tar.gz langsung..."
-           cp file.tar.gz ../../imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz
+          case "$FILE" in
+            *.img.gz)
+              echo "[🗜] Mengekstrak GZIP image..."
+              sudo gunzip "$FILE"
+              IMG="${FILE%.gz}"
+              ;;
+            *.img.xz)
+              echo "[🗜] Mengekstrak XZ image..."
+              sudo unxz "$FILE"
+              IMG="${FILE%.xz}"
+              ;;
+            *.tar.gz)
+              echo "[📦] File adalah arsip rootfs (.tar.gz), menyalin langsung..."
+              cp "$FILE" ../../imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz
+              echo "[✅] Selesai (tar.gz langsung)"
+              exit 0
+              ;;
+            *)
+              echo "[❌] Tidak dapat mengenali format file: $FILE"
+              exit 1
+              ;;
+          esac
 
+          if [ -f "$IMG" ]; then
+            echo "[🧩] Mem-mount image untuk ekstraksi rootfs..."
+            los=$(sudo losetup -fP --show "$IMG")
+            sudo mount ${los}p2 rootfs || (echo "[⚠️] Gagal mount partisi rootfs, mencoba partisi p1..." && sudo mount ${los}p1 rootfs)
+            (cd rootfs && sudo tar cfz ../../imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz .)
+            sudo umount rootfs
+            sudo losetup -d "$los"
+            echo "[✅] Rootfs berhasil diekstrak ke imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/"
           else
-           echo "[❌] Jenis file tidak dikenal: ${{ inputs.type_file }}"
-          exit 1
+            echo "[❌] File image tidak ditemukan setelah ekstraksi!"
+            exit 1
           fi
 
-          echo "[✅] File rootfs siap di folder imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/"
- 
   
       - name: Clear server space
         if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
