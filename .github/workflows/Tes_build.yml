@@ -258,44 +258,44 @@ jobs:
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
           
+      
       - name: Download file ${{ github.event.inputs.type_file }}
-        id: download
         if: ${{ inputs.rootfs_url != '' }}
         run: |
-          echo "[🌐] Mengunduh file dari: ${{ inputs.rootfs_url }}"
-          mkdir -p build && cd build
+         mkdir -p build
 
-          # Ambil ekstensi dari URL (bagian setelah titik terakhir)
-          url="${{ inputs.rootfs_url }}"
-          fname=$(basename "$url")
-          ext="${fname##*.}"
+          echo "[🔍] Mendeteksi sumber dari: ${{ github.event.inputs.rootfs_url }}"
 
-          # Tentukan nama file target standar berdasarkan ekstensi
-          if [[ "$fname" == *.img.gz ]]; then
-            target="file.img.gz"
-          elif [[ "$fname" == *.img.xz ]]; then
-            target="file.img.xz"
-          elif [[ "$fname" == *.tar.gz ]]; then
-            target="file.tar.gz"
-          elif [[ "$fname" == *.img.zst ]]; then
-            target="file.img.zst"
+         if echo "${{ github.event.inputs.rootfs_url }}" | grep -q "drive."; then
+         echo "[🌐] Sumber: Google Drive"
+         if echo "${{ github.event.inputs.rootfs_url }}" | awk -F "/" '{print $6}' | grep -q .; then
+         link_gdrive=$(echo "${{ github.event.inputs.rootfs_url }}" | awk -F "/" '{print $6}')
           else
-            target="file.unknown"
-          fi
+         link_gdrive=$(echo "${{ github.event.inputs.rootfs_url }}" | awk -F "/" '{print $4}' | awk -F "?id=" '{print $2}' | awk -F "&export" '{print $1}')
+         fi
+         echo "[⬇️] Mengunduh dari Google Drive: ID $link_gdrive"
+         sudo gdown "$link_gdrive" -O build/file.${{ github.event.inputs.type_file }}
 
-          echo "[🧩] Ekstensi terdeteksi: $ext"
-          echo "[⬇️] Menyimpan sebagai: $target"
+         elif echo "${{ github.event.inputs.rootfs_url }}" | grep -q "mediafire.com"; then
+         echo "[🌐] Sumber: MediaFire"
+         echo "[⬇️] Mengunduh dari MediaFire: ${{ github.event.inputs.rootfs_url }}"
+         sudo mediafire-dl "${{ github.event.inputs.rootfs_url }}" -o build/file.${{ github.event.inputs.type_file }}
 
-          # Gunakan wget dengan progress bar dan retry
-          wget -q --show-progress --retry-connrefused --waitretry=3 -O "$target" "$url"
+         elif echo "${{ github.event.inputs.rootfs_url }}" | grep -q "mega.nz"; then
+         echo "[🌐] Sumber: MEGA.nz"
+         echo "[⬇️] Mengunduh dari MEGA: ${{ github.event.inputs.rootfs_url }}"
+         file_mega=$(sudo mega-get "${{ github.event.inputs.rootfs_url }}" | awk -F: '{print $2}')
+         sudo mv "${file_mega}" "build/file.${{ github.event.inputs.type_file }}"
 
-          if [ ! -f "$target" ]; then
-            echo "[❌] Gagal mengunduh file dari URL!"
-            exit 1
-          fi
+         else
+          echo "[🌐] Sumber: URL langsung"
+          echo "[⬇️] Mengunduh dari URL: ${{ github.event.inputs.rootfs_url }}"
+          sudo wget --no-check-certificate "${{ github.event.inputs.rootfs_url }}" -O build/file.${{ github.event.inputs.type_file }}
+         fi
 
-          echo "[✅] File berhasil diunduh: $target"
+         echo "[✅] File berhasil diunduh ke build/file.${{ github.event.inputs.type_file }}"
 
+          
       - name: Extract firmware (auto-detect)
         id: extract
         if: ${{ inputs.rootfs_url != '' }}
