@@ -96,16 +96,12 @@ on:
           - 5.15.y_5.10.y
           - 6.6.y_6.12.y
      
-      kernel_usage:
-        description: "Set the tags of the stable kernel."
+      inject_files:
+        description: "Inject custom files/ folder ke rootfs"
         required: false
-        default: "stable"
-        type: choice
-        options:
-          - stable
-          - flippy
-          - dev
-          - s905x4
+        default: "true"
+        type: boolean
+
       upload-prerelease:
         description: "Upload as pre-release"
         required: false
@@ -556,42 +552,60 @@ jobs:
 
           case "${{ inputs.type_file }}" in
           img.gz)
-          echo "[🗜] Ekstrak GZIP image..."
-          mkdir -p boot rootfs img
-          gunzip file.img.gz
-          los=$(sudo losetup -fP --show file.img)
-          sudo mount ${los}p2 rootfs
-          echo "[🗂] Inject files/ ke rootfs..."
-           [ -d ../files ] && sudo cp -a ../files/* rootfs/ || true
-           (cd rootfs && sudo tar cfz ../../imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz .)
-          sudo umount rootfs
-          sudo losetup -d $los
-          ;;
+            echo "[🗜] Ekstrak GZIP image..."
+            mkdir -p boot rootfs img
+            gunzip file.img.gz
+            los=$(sudo losetup -fP --show file.img)
+            sudo mount ${los}p2 rootfs
+
+            if [[ "${{ inputs.inject_files }}" == 'true' ]]; then
+              echo "[🗂] Inject files/ ke rootfs..."
+              [ -d ../files ] && sudo cp -a ../files/* rootfs/ || true
+            else
+              echo "[🚫] Lewati injeksi files/"
+            fi
+
+            (cd rootfs && sudo tar cfz ../../imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz .)
+            sudo umount rootfs
+            sudo losetup -d $los
+            ;;
           img.xz)
-          echo "[🗜] Ekstrak XZ image..."
-          mkdir -p boot rootfs img
-          unxz file.img.xz
-          los=$(sudo losetup -fP --show file.img)
-          sudo mount ${los}p2 rootfs
-          echo "[🗂] Inject files/ ke rootfs..."
-          [ -d ../files ] && sudo cp -a ../files/* rootfs/ || true
-          (cd rootfs && sudo tar cfz ../../imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz .)
-          sudo umount rootfs
-          sudo losetup -d $los
-          ;;
+            echo "[🗜] Ekstrak XZ image..."
+            mkdir -p boot rootfs img
+            unxz file.img.xz
+            los=$(sudo losetup -fP --show file.img)
+            sudo mount ${los}p2 rootfs
+
+            if [[ "${{ inputs.inject_files }}" == 'true' ]]; then
+              echo "[🗂] Inject files/ ke rootfs..."
+              [ -d ../files ] && sudo cp -a ../files/* rootfs/ || true
+            else
+              echo "[🚫] Lewati injeksi files/"
+            fi
+
+            (cd rootfs && sudo tar cfz ../../imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz .)
+            sudo umount rootfs
+            sudo losetup -d $los
+            ;;
           tar.gz)
-          echo "[📦] Menggunakan file tar.gz langsung..."
-           cp file.tar.gz ../rootfs.tar.gz
-           mkdir rootfs
-           tar -xzf ../rootfs.tar.gz -C rootfs
-           echo "[🗂] Inject files/ ke rootfs..."
-           [ -d ../files ] && cp -a ../files/* rootfs/ || true
-           (cd rootfs && tar cfz ../../imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz .)
-          ;;
+            echo "[📦] Menggunakan file tar.gz langsung..."
+            cp file.tar.gz ../rootfs.tar.gz
+            mkdir rootfs
+            tar -xzf ../rootfs.tar.gz -C rootfs
+
+            if [[ "${{ inputs.inject_files }}" == 'true' ]]; then
+              echo "[🗂] Inject files/ ke rootfs..."
+              [ -d ../files ] && cp -a ../files/* rootfs/ || true
+            else
+              echo "[🚫] Lewati injeksi files/"
+            fi
+
+            (cd rootfs && tar cfz ../../imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/openwrt-${{ env.openwrt_board }}-external-rootfs.tar.gz .)
+            ;;
           *)
-          echo "[❌] Jenis file tidak dikenal: ${{ inputs.type_file }}"
-          exit 1
-           ;;
+            echo "[❌] Jenis file tidak dikenal: ${{ inputs.type_file }}"
+            exit 1
+            ;;
           esac
 
           echo "[✅] File rootfs siap di folder imagebuilder/bin/targets/amlogic/${{ env.openwrt_board }}/"
