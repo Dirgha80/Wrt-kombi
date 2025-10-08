@@ -141,6 +141,7 @@ on:
           - openclash
           - passwall
           - nikki
+          - passwall2
           - openclash-passwall
           - nikki-passwall
           - nikki-openclash
