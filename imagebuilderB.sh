@@ -297,14 +297,17 @@ custom_packages() {
     )
     download_packages "custom" other_packages[@]
 
-    echo -e "${STEPS} Mengunduh paket-paket khusus: OpenClash, Passwall, Nikki..."
+    echo -e "${STEPS} Mengunduh paket-paket khusus: OpenClash, Passwall, passwalw, Nikki..."
     local openclash_url=$(curl -s "https://api.github.com/repos/tes-rep/OpenClash/releases" | grep "browser_download_url" | grep -oE "https.*luci-app-openclash.*\.ipk" | head -n 1)
-    local passwall_url=$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall/releases" | grep "browser_download_url" | grep -oE "https.*luci-23.05_luci-app-passwall.*\.ipk" | head -n 1)
+    local passwall_url=$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall/releases" | grep "browser_download_url" | grep -oE "https.*luci-24.10_luci-app-passwall.*\.ipk" | head -n 1)
     local passwall_zip_url=$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall/releases" | grep "browser_download_url" | grep -oE "https.*passwall_packages_ipk_${ARCH_3}.*\.zip" | head -n 1)
+    local passwall2_url=$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases" | grep "browser_download_url" | grep -oE "https.*luci-24.10_luci-app-passwall2.*\.ipk" | head -n 1)
+    # local passwall_zip_url=$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall/releases" | grep "browser_download_url" | grep -oE "https.*passwall2_packages_ipk_${ARCH_3}.*\.zip" | head -n 1)
     local nikki_url=$(curl -s "https://api.github.com/repos/rizkikotet-dev/OpenWrt-nikki-Mod/releases" | grep "browser_download_url" | grep -oE "https.*nikki_${ARCH_3}-openwrt-24.10.*\.tar\.gz" | head -n 1)
     
     [[ -n "${openclash_url}" ]] && curl -fsSOL "${openclash_url}"
     [[ -n "${passwall_url}" ]] && curl -fsSOL "${passwall_url}"
+    [[ -n "${passwall2_url}" ]] && curl -fsSOL "${passwall2_url}"
     [[ -n "${passwall_zip_url}" ]] && { curl -fsSOL "${passwall_zip_url}" && unzip -q "$(basename "${passwall_zip_url}")" && rm "$(basename "${passwall_zip_url}")"; }
     [[ -n "${nikki_url}" ]] && { curl -fsSOL "${nikki_url}" && tar -xzvf "$(basename "${nikki_url}")" && rm "$(basename "${nikki_url}")"; }
 
@@ -389,7 +392,7 @@ rebuild_firmware() {
                 tunnel_option_list="nikki openclash"
                 ;;
             all-tunnel)
-                tunnel_option_list="openclash passwall nikki"
+                tunnel_option_list="openclash passwall nikki passwall2"
                 ;;
             *)
                 tunnel_option_list="${TUNNEL_OPTION}"
