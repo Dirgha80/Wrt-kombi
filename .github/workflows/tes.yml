@@ -97,7 +97,7 @@ on:
           - 6.6.y_6.12.y
      
       inject_files:
-        description: "Inject custom files/ folder ke rootfs"
+        description: "Inject custom files/ folder ke rootfs(khusus unduh roofts)"
         required: false
         default: "true"
         type: boolean
