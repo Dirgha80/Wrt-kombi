@@ -259,18 +259,33 @@ download_imagebuilder() {
         ARCH_3="x86_64"
     fi
 
-    # Downloading imagebuilder files
-    download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.tar.zst"
-    curl -fsSOL ${download_file}
-    [[ "${?}" -eq "0" ]] || error_msg "Download failed: [ ${download_file} ]"
-    echo -e "${SUCCESS} Download Base ${op_branch} ${target_name} successfully!"
+    # Deteksi ekstensi file dan perintah ekstrak berdasarkan versi OpenWrt
+if echo "$op_branch" | grep -q "^24\."; then
+    FILE_EXT="tar.zst"
+    TAR_CMD="tar --zstd -xvf"
+elif echo "$op_branch" | grep -q "^23\."; then
+    FILE_EXT="tar.xz"
+    TAR_CMD="tar -xvJf"
+else
+    echo "[ERROR] Versi tidak dikenali untuk op_branch: $op_branch"
+    exit 1
+fi
 
-    # Unzip and change the directory name
-    tar --zstd -xvf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.zst
-    mv -f *-imagebuilder-* ${openwrt_dir}
+# Nama file & URL imagebuilder
+download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${FILE_EXT}"
+imagebuilder_file="${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${FILE_EXT}"
 
-    sync && sleep 3
-    echo -e "${INFO} [ ${make_path} ] directory status: $(ls -al 2>/dev/null)"
+# Download
+curl -fsSOL "${download_file}"
+[[ "$?" -eq 0 ]] || error_msg "Download failed: [ ${download_file} ]"
+echo -e "${SUCCESS} Download Base ${op_branch} ${target_name} successfully!"
+
+# Ekstrak dan ubah nama direktori
+$TAR_CMD "${imagebuilder_file}" && sync && rm -f "${imagebuilder_file}"
+mv -f *-imagebuilder-* "${openwrt_dir}"
+
+sync && sleep 3
+echo -e "${INFO} [ ${make_path} ] directory status: $(ls -al 2>/dev/null)"
 }
 
 # Adjust related files in the ImageBuilder directory
@@ -515,7 +530,7 @@ rebuild_firmware() {
     kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial-sierrawireless \
     kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-utils libimobiledevice-utils usb-modeswitch kmod-nls-utf8 mbim-utils xmm-modem \
     kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty"
-    PACKAGES+=" luci-app-base64 perl perlbase-essential perlbase-cpan perlbase-utf8 perlbase-time perlbase-xsloader perlbase-extutils perlbase-cpan perl"
+    PACKAGES+=" luci-app-base64 perl perlbase-essential perlbase-cpan perlbase-utf8 perlbase-time perlbase-xsloader perlbase-extutils perlbase-cpan perl coreutils-base64"
 
     # Modem Tools
     #PACKAGES+=" modeminfo luci-app-modeminfo atinout modemband luci-app-modemband sms-tool luci-app-sms-tool-js luci-app-lite-watchdog luci-app-3ginfo-lite picocom minicom"
@@ -528,7 +543,7 @@ rebuild_firmware() {
 
 
     # Remote Services
-    PACKAGES+=" tailscale luci-app-tailscale  luci-app-droidnet luci-app-ipinfo luci-theme-initials luci-theme-argon luci-app-argon-config luci-theme-hj"
+    PACKAGES+=" tailscale luci-app-tailscale  luci-app-droidnet luci-app-ipinfo luci-theme-initials luci-theme-argon luci-app-argon-config luci-theme-hj jq"
 
     # NAS and Hard disk tools
     PACKAGES+=" luci-app-diskman smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
@@ -569,15 +584,26 @@ rebuild_firmware() {
     PACKAGES+=" $misc zram-swap adb parted losetup resize2fs luci luci-ssl block-mount luci-app-ramfree htop bash curl wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
 
     # Exclude package (must use - before packages name)
-    EXCLUDED+=" -libgd"
-    if [ "${op_sourse}" == "openwrt" ]; then
-        EXCLUDED+=" -dnsmasq"
-    elif [ "${op_sourse}" == "immortalwrt" ]; then
-        EXCLUDED+=" -dnsmasq -automount -libustream-openssl -default-settings-chn -luci-i18n-base-zh-cn"
-        if [ "$ARCH_2" == "x86_64" ]; then
+EXCLUDED+=" -libgd"
+
+# Jika kernel dari GitHub Actions adalah 5.4
+if echo "$OPENWRT_KERNEL" | grep -q "5.4"; then
+    echo "[INFO] Detected kernel 5.4, excluding procd-ujail"
+    EXCLUDED+=" -procd-ujail"
+fi
+
+# Tambahan berdasarkan source
+if [ "${op_sourse}" == "openwrt" ]; then
+    EXCLUDED+=" -dnsmasq"
+elif [ "${op_sourse}" == "immortalwrt" ]; then
+    EXCLUDED+=" -dnsmasq -automount -libustream-openssl -default-settings-chn -luci-i18n-base-zh-cn"
+
+    # Tambahan untuk x86_64
+    if [ "$ARCH_2" == "x86_64" ]; then
         EXCLUDED+=" -kmod-usb-net-rtl8152-vendor"
-        fi
     fi
+fi
+
 
     # Rebuild firmware
     make clean

@@ -1,275 +1,337 @@
-{#
- Copyright 2008 Steven Barth <steven@midlink.org>
- Copyright 2008-2012 Jo-Philipp Wich <jow@openwrt.org>
- Licensed to the public under the Apache License 2.0.
--#}
-
 <style>
-    /* Menyembunyikan header */
-    header {
-        display: none;
-    }
-
-    /* Gaya untuk overlay */
-    #overlay {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.7); /* Latar belakang transparan */
-        z-index: 10;
-    }
-
-    /* Gaya untuk shape */
-    #shape {
-        width: 300px; /* Lebar shape */
-        height: 300px; /* Tinggi shape */
-        background-color: white; /* Warna shape */
-        border-radius: 15px; /* Sudut melengkung */
-        position: relative;
-        z-index: 15; /* Pastikan shape di atas overlay */
-        padding: 20px; /* Tambahkan padding */
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); /* Tambahkan bayangan */
-        display: flex; /* Menggunakan flex untuk memusatkan konten */
-        flex-direction: column; /* Arahkan kolom */
-        justify-content: center; /* Pusatkan secara vertikal */
-        align-items: center; /* Pusatkan secara horizontal */
-    }
-
-    /* Gaya untuk teks judul */
-    .title-text {
-        text-align: center;
-        font-size: 20px; /* Ukuran font */
-        margin-bottom: 10px; /* Jarak bawah */
-        color: black; /* Warna teks */
-        font-weight: bold; /* Huruf tebal */
-        text-transform: uppercase; /* Mengubah menjadi huruf kapital */
-    }
-
-    /* Gaya untuk teks warning */
-    .warning-text {
-        text-align: center;
-        font-size: 20px; /* Ukuran font lebih kecil */
-        color: red; /* Warna merah */
-        margin-bottom: 5px; /* Jarak bawah */
-        font-weight: bold; /* Huruf tebal */
-        animation: blinker 1.5s linear infinite;
-                color: red;
-                font-family: sans-serif;
-            }
-            @keyframes blinker {
-                50% {
-                    opacity: 0;
-                }
-            }
-    }
-
-    /* Gaya untuk hitungan mundur */
-    .countdown-text {
-        font-size: 20px; /* Ukuran font hitungan mundur */
-        color: black; /* Warna teks */
-        margin-top: 10px; /* Jarak atas */
-    }
-
-    /* Gaya untuk tombol close */
-    .close-button {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        color: white; /* Ubah warna teks tombol menjadi putih */
-        background: white; /* Ubah warna latar belakang tombol menjadi putih */
-        border: none;
-        padding: 10px;
-        cursor: pointer;
-        z-index: 16; /* Pastikan tombol di atas shape */
-    }
-
-    /* Gaya untuk form login */
-    #loginForm {
-        display: none; /* Sembunyikan form login awal */
-        z-index: 20; /* Pastikan form berada di atas overlay */
-        position: relative;
-    }
-    .login_form_container{
-    position: relative;
-    width: 380px;
-    height: 550px;
-    max-width: 380px;
-    max-height: 550px;
-    # background: #0c1022;
-    border-radius: 30px 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    margin-top: 140px;
+/* ===== RESET & FONT ===== */
+header { display: none; }
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+  background: radial-gradient(circle at top, #000 60%, #020202);
+  color: white;
+  font-family: "Orbitron", sans-serif;
 }
-.login_form_container::before{
-    
-    position: absolute;
-    width: 170%;
-    height: 170%;
-    content: '';
-    background-image: conic-gradient(transparent, transparent, transparent, #ffd700);
-    animation: rotate_border 4s linear infinite;
 
+/* ===== OVERLAY WARNING ===== */
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  animation: fadeIn 0.6s ease-in;
 }
-.login_form_container::after{
-    
-    position: absolute;
-    width: 170%;
-    height: 170%;
-    content: '';
-    background-image: conic-gradient(transparent, transparent, transparent, #00FA9A);
-    animation: rotate_border 4s linear infinite;
-    animation-delay: -2s;
+
+#shape {
+  width: 600px;
+  height: auto;
+  background: linear-gradient(180deg, #330000, #000);
+  border: 2px solid red;
+  border-radius: 15px;
+  box-shadow: 0 0 20px red;
+  padding: 25px;
+  text-align: center;
+  color: #fff;
+  position: relative;
+  animation: pulseRed 3s infinite;
 }
-@keyframes rotate_border{
-    0%{
-        transform: rotate(0deg);
-    }
-    100%{
-        transform: rotate(360deg);
-    }
+
+.warning-text {
+  font-size: 35px;
+  font-weight: bold;
+  color: #ff0000;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
+  animation: blinker 3s linear infinite;
+}
+
+@keyframes blinker {
+  0%, 50%, 100% { opacity: 1; }
+  25%, 75% { opacity: 0; }
+}
+
+.title-text {
+  font-size: 30px;
+  margin-top: 10px;
+  color: #fff;
+}
+
+.countdown-text {
+  margin-top: 10px;
+  font-size: 25px;
+  color: #ffd700;
+}
+
+/* Tombol close transparan */
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+.back-button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  font-size: 14px;
+  background: linear-gradient(90deg, #ff0000, #990000);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 0 10px red;
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+.back-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px #ff3333;
+}
+
+/* ===== CONTAINER LOGIN ===== */
+.login_form_container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 600px;
+  height: 770px;
+  border-radius: 25px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 40px rgba(0, 255, 255, 0.25);
+  animation: breathing_glow 6s ease-in-out infinite;
+  z-index: 10;
+}
+
+/* BORDER GRADIENT BERPUTAR */
+.login_form_container::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  background: conic-gradient(
+    #00ffcc,
+    #00ff00,
+    #ffff00,
+    #ff6600,
+    #ff00ff,
+    #00ccff,
+    #00ffcc
+  );
+  animation: rotate_border 4s linear infinite;
+  z-index: 1;
+  border-radius: 25px;
+}
+
+/* ===== ANIMASI BORDER DAN GLOW ===== */
+@keyframes rotate_border {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes breathing_glow {
+  0% { box-shadow: 0 0 35px #00ffff, 0 0 70px #00ffcc; }
+  25% { box-shadow: 0 0 45px #00ff00, 0 0 80px #00ffaa; }
+  50% { box-shadow: 0 0 50px #ffff00, 0 0 100px #ffcc00; }
+  75% { box-shadow: 0 0 45px #ff00ff, 0 0 90px #ff66ff; }
+  100% { box-shadow: 0 0 35px #00ffff, 0 0 70px #00ffcc; }
+}
+
+/* ===== ISI FORM ===== */
+#loginForm {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  padding: 30px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #000, #031010, #001a20, #000);
+  background-size: 300% 300%;
+  animation: gradient_spin 6s linear infinite;
+  opacity: 0;
+  display: none;
+  transition: opacity 0.6s ease;
+}
+.show-login {
+  display: block !important;
+  opacity: 1 !important;
+}
+
+@keyframes gradient_spin {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ===== LOGO ===== */
+.logo {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin: 0 auto 10px auto;
+  background: radial-gradient(circle, #00ffcc 10%, transparent 70%);
+  box-shadow: 0 0 25px #00ffcc, 0 0 50px #00ffff, inset 0 0 20px #00ffaa;
+  animation: spin_logo 8s linear infinite;
+}
+@keyframes spin_logo {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ===== JAM & TANGGAL ===== */
+.clock-area {
+  text-align: center;
+  color: #00ffaa;
+  font-size: 25px;
+  letter-spacing: 1px;
+  margin-top: 10px;
+  text-shadow: 0 0 10px #00ffaa, 0 0 20px #00ffaa;
+}
+
+/* ===== JUDUL ===== */
+.cbi-map h2 {
+  font-size: 30px;
+  text-align: center;
+  color: #00ffcc;
+  text-shadow: 0 0 15px #00ffcc, 0 0 30px #00ffcc;
+}
+
+/* ===== INPUT ===== */
+.cbi-value label {
+  font-size: 21px;
+  color: #00ffaa;
+  text-shadow: 0 0 8px #00ffaa;
+  display: block;
+  margin-top: 10px;
+}
+input.cbi-input-text {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid #00ffcc;
+  border-radius: 10px;
+  padding: 10px;
+  color: #00ffcc;
+  font-size: 18px;
+  margin-top: 8px;
+  box-shadow: 0 0 10px rgba(0, 255, 200, 0.3);
+  outline: none;
+  transition: 0.3s;
+}
+input.cbi-input-text:focus {
+  border-color: #00ffff;
+  box-shadow: 0 0 20px #00ffff;
+  color: #00ffff;
+}
+
+/* ===== TOMBOL ===== */
+.cbi-page-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+.cbi-page-actions input.btn {
+  flex: 1;
+  margin: 0 5px;
+  padding: 10px;
+  background: linear-gradient(90deg, #00ffcc, #00ffff, #00ff80);
+  background-size: 200% 100%;
+  color: #000;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.5s all ease;
+  text-transform: uppercase;
+  font-family: "Orbitron", sans-serif;
+  box-shadow: 0 0 25px #00ffff;
+}
+.cbi-page-actions input.btn:hover {
+  background-position: 100% 0;
+  color: #00ffff;
+  box-shadow: 0 0 35px #00ffff, inset 0 0 10px #00ffff;
+}
+
+/* Fade */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(25px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>
 
-{% include('header') %}
-
-<!-- Overlay dengan shape -->
+<!-- Overlay -->
 <div id="overlay">
-    <div id="shape">
-        <div class="warning-text"><blink>Warning : situs Terlarang</blink></div> <!-- Teks warning -->
-        <div class="title-text">SEGERA KELUAR,DALAM 10 DETIK SITUS INI AKAN MENGAMBIL FOTO SELFIE ANDA</div> <!-- Teks judul -->
-        <div class="countdown-text" id="countdown">10 DETIK</div> <!-- Teks hitungan mundur -->
-        <button type="button" class="close-button" onclick="closeOverlay()">X</button>
-        <button type="button" class="back-button" onclick="window.location.href='http://google.com';">KEMBALI</button>
-    </div>
+  <div id="shape">
+    <div class="warning-text">Warning : Situs Terlarang</div>
+    <div class="title-text">Segera keluar, dalam 20 detik situs ini akan mengambil foto selfie anda</div>
+    <div class="countdown-text" id="countdown">20 DETIK</div>
+    <button type="button" class="close-button" onclick="closeOverlay()">X</button>
+    <button type="button" class="back-button" onclick="window.location.href='http://google.com';">KEMBALI</button>
+  </div>
 </div>
 
-<!-- Form login -->
+<!-- Login -->
 <div class="login_form_container">
-<form id="loginForm" method="post">
-    {% if (fuser): %}
-        <div class="alert-message warning">
-            <p>{{ _('Invalid username and/or password! Please try again.') }}</p>
-        </div>
-    {% endif %}
-
+  <form id="loginForm" method="post">
+    <div class="logo"></div>
     <div class="cbi-map">
-        <center><h2 name="content">{{ _('HOUJIE_Wrt') }}</h2></center>
-        <script type="text/javascript">window.setTimeout("waktu()",1000); function waktu(){var tanggal=new Date(); setTimeout("waktu()",1000); document.getElementById("jam").innerHTML=tanggal.getHours()+":"+tanggal.getMinutes()+":"+tanggal.getSeconds();}</script>
-        <script language="JavaScript"> 
-            var tanggallengkap=new String(); 
-            var namahari=("Minggu Senin Selasa Rabu Kamis Jumat Sabtu"); 
-            namahari=namahari.split(" "); 
-            var namabulan=("Januari Februari Maret April Mei Juni Juli Agustus September Oktober November Desember"); 
-            namabulan=namabulan.split(" "); 
-            var tgl=new Date(); 
-            var hari=tgl.getDay(); 
-            var tanggal=tgl.getDate(); 
-            var bulan=tgl.getMonth(); 
-            var tahun=tgl.getFullYear(); 
-            tanggallengkap=namahari[hari] + ", " +tanggal + " " + namabulan[bulan] + " " + tahun; 
-        </script>
-        <center><script language='JavaScript'>document.write(tanggallengkap); </script> | <span id='jam'></span></center>
-        <div class="cbi-section">
-            <div class="cbi-section-node">
-                <div class="cbi-value">
-                    <label class="cbi-value-title">{{ _('Username') }}</label>
-                    <div class="cbi-value-field">
-                        <input class="cbi-input-text" type="text" name="luci_username" value="{{ entityencode(duser, true) }}" />
-                    </div>
-                </div>
-                <div class="cbi-value cbi-value-last">
-                    <label class="cbi-value-title">{{ _('Password') }}</label>
-                    <div class="cbi-value-field">
-                        <input class="cbi-input-text" type="password" name="luci_password" />
-                    </div>
-                </div>
-            </div>
+      <h2>HOUJIE_WRT</h2>
+      <div class="clock-area">
+      <span id="hari"></span>, <span id="tanggal"></span> | <span id="jam"></span>
+    </div>
+      <div class="cbi-section">
+        <div class="cbi-value">
+          <label>Username</label>
+          <input class="cbi-input-text" type="text" name="luci_username" />
         </div>
+        <div class="cbi-value">
+          <label>Password</label>
+          <input class="cbi-input-text" type="password" name="luci_password" />
+        </div>
+      </div>
+      <div class="cbi-page-actions">
+        <input type="submit" value="Login" class="btn" />
+        <input type="reset" value="Reset" class="btn" />
+      </div>
     </div>
-
-    <div class="cbi-page-actions">
-        <input type="submit" value="{{ _('Log in') }}" class="btn cbi-button cbi-button-apply" />
-        <input type="reset" value="{{ _('Reset') }}" class="btn cbi-button cbi-button-reset" />
-    </div>
-</form>
+  </form>
 </div>
 
-{%
-    let https_ports = uci.get('uhttpd', 'main', 'listen_https') ?? [];
+<script>
+function updateClock() {
+  const hariArr = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+  const bulanArr = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  const now = new Date();
+  document.getElementById('hari').textContent = hariArr[now.getDay()];
+  document.getElementById('tanggal').textContent = `${now.getDate()} ${bulanArr[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById('jam').textContent = now.toLocaleTimeString('id-ID', { hour12: false });
+}
+setInterval(updateClock, 1000);
+updateClock();
 
-    https_ports = uniq(filter(
-        map(
-            (type(https_ports) == 'string') ? split(https_port, /\s+/) : https_ports,
-            e => +match(e, /\d+$/)?.[0]
-        ),
-        p => (p >= 0 && p <= 65535)
-    ));
-%}
+var countdownValue = 20;
+function updateCountdown() {
+  if (countdownValue > 0) {
+    document.getElementById('countdown').innerText = countdownValue + ' Detik';
+    countdownValue--;
+  } else {
+    document.getElementById('countdown').innerText = 'Good Bye';
+    window.location.href = 'http://facebook.com';
+  }
+}
+setInterval(updateCountdown, 1000);
 
-<script type="text/javascript">
-//<![CDATA[
-    // Array gambar latar belakang
-    var backgrounds = [
-        '/luci-static/background/bg1.jpg',
-        '/luci-static/background/bg2.jpg',
-        '/luci-static/background/bg3.jpg',
-        '/luci-static/background/bg4.jpg'
-    ];
-
-    // Mengambil indeks acak
-    var randomIndex = Math.floor(Math.random() * backgrounds.length);
-    
-    // Mengatur latar belakang
-    document.body.style.backgroundImage = 'url(' + backgrounds[randomIndex] + ')';
-    document.body.style.backgroundSize = 'cover'; // Pastikan gambar memenuhi layar
-
-    var input = document.getElementsByName('luci_password')[0];
-    var countdownValue = 10; // Inisialisasi hitungan mundur
-
-    if (input)
-        input.focus();
-
-    // Fungsi untuk mengupdate hitungan mundur
-    function updateCountdown() {
-        if (countdownValue > 0) {
-            document.getElementById('countdown').innerText = countdownValue + ' Detik';
-            countdownValue--;
-        } else {
-            document.getElementById('countdown').innerText = 'Good Bye';
-            // Alihkan ke alamat IP setelah hitungan mundur selesai
-            window.location.href = 'http://facebook.com';
-        }
-    }
-
-    // Update hitungan mundur setiap detik
-    setInterval(updateCountdown, 1000);
-
-    if (document.location.protocol != 'https:') {
-        {{ https_ports }}.forEach(function(port) {
-            var url = 'https://' + window.location.hostname + ':' + port + window.location.pathname;
-            var img = new Image();
-
-            img.onload = function() { window.location = url };
-            img.src = 'https://' + window.location.hostname + ':' + port + '{{ resource }}/icons/loading.gif?' + Math.random();
-
-            setTimeout(function() { img.src = '' }, 5000);
-        });
-    }
-
-    // Fungsi untuk menutup overlay dan menampilkan form login
-    function closeOverlay() {
-        document.getElementById('overlay').style.display = 'none';
-        document.getElementById('loginForm').style.display = 'block';
-    }
-//]]>
+function closeOverlay() {
+  document.getElementById('overlay').style.display = 'none';
+  document.getElementById('loginForm').classList.add('show-login');
+}
 </script>
-
-{% include('footer') %}

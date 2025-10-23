@@ -14,7 +14,7 @@
 	<div class="spinning">{{ _('Loading hJ-wrt…') }}</div>
 </div>
 
-<script type="text/javascript">//<![CDATA[
+<script>
 function progressbar(query, value, max, byte)
 {
 	var pg = document.querySelector(query),
@@ -48,7 +48,7 @@ function renderBadge(icon, title) {
 	]);
 }
 
-//]]></script>
+</script>
 <script type="text/javascript">//<![CDATA[
 	window.setTimeout(
 		function() {
@@ -63,60 +63,6 @@ function renderBadge(icon, title) {
 		}
 	);
 //]]></script>
-
-<script type="text/javascript">//<![CDATA[
-XHR.poll(3, '{{ dispatcher.build_url("admin", "services", "openclash", "status") }}', null, 
-function(x, status) {
-         var clash = document.getElementById('_clash');
-		if ( x && x.status == 200 ) {
-			if ( status.restricted_mode != "1" )
-			{
-			   clash.innerHTML = status.clash ? '<em><img src="/luci-static/resources/openclash/img/69207.gif"><b style=color:cyan> Running </b><img src="/luci-static/resources/openclash/img/69207.gif"></em>' : '<em><b style=color:#E74C3C> Not Running </b></em>';
-			}
-			else
-			{
-			   clash.innerHTML = status.clash ? '<em><b style=color:green> Running Limited State </b></em>' : '<em><b style=color:#E74C3C> Not Running </b></em>';
-			}
-		}
-	}
-);
-	  
-//]]></script>
-<script type="text/javascript">//<![CDATA[
-XHR.poll(3, '{{ dispatcher.build_url("admin", "services", "passwall", "global", "status") }}', null, 
-function(x, status) {
-         var wall = document.getElementById('wall');
-		if ( x && x.status == 200 ) {
-			if ( status.restricted_mode != "1" )
-			{
-			   wall.innerHTML = tcp_node_status? '<em><b style=color:cyan>Running </b></em>' : '<em><b style=color:#E74C3C> Not Running </b></em>';
-			}
-			else
-			{
-			   wall.innerHTML = tcp_node_status ? '<em><b style=color:green> Running  Limited State</b></em>' : '<em><b style=color:#E74C3C> Not Running </b></em>';
-			}
-		}
-	}
-);
-//]]>
-</script>
-
-<script type="text/javascript">//<![CDATA[
-XHR.poll(3, '{{ dispatcher.build_url("admin", "services", "zerotier", "status") }}', null,
-	function(x, data) {
-		var tb = document.getElementById('zerotier_status');
-		if (data && tb) {
-			if (data.running) {
-				var links = '<em><b><font color=cyan> Running </font></b></em>';
-				tb.innerHTML = links;
-			} else {
-				tb.innerHTML = '<em><b><font color=#E74C3C> Not Running </font></b></em>';
-			}
-		}
-	}
-);
-//]]>
-</script>
 <script type="text/javascript">//<![CDATA[
 	window.setTimeout(
 		function() {
@@ -145,7 +91,6 @@ XHR.poll(3, '{{ dispatcher.build_url("admin", "services", "zerotier", "status") 
 		}
 	);
 //]]></script>
-
 <div class="includes" style="display:none">
 {%
 	let lua_available = true;
@@ -158,7 +103,7 @@ XHR.poll(3, '{{ dispatcher.build_url("admin", "services", "zerotier", "status") 
 %}
 </div>
 
-<script type="text/javascript">
+<script>
 	L.require('ui').then(function(ui) {
 		ui.instantiateView('status/index');
 	});
