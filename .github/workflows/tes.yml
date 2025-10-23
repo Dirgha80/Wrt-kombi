@@ -772,7 +772,7 @@ jobs:
         uses: ncipollo/release-action@main
         if: success()
         with:
-          tag: HOUJIE-Wrt_${{ inputs.releases_branch }}_${{ env.BUILD_DATE }}
+          tag: HOUJIE-Wrt_${{ env.RELEASES_TAG2 }}_${{ env.BUILD_DATE }}
           artifacts: 'final_release/*'
           allowUpdates: true
           replacesArtifacts: true
