@@ -750,6 +750,12 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAG_NAME: ${{ needs.build.outputs.tag_name }}
+      RELEASES_TAG2: ${{ needs.build.outputs.releases_tag2 }}
+      TARGET_NAME: ${{ needs.build.outputs.target_name }}
+      BUILD_DATE: ${{ needs.build.outputs.build_date }}
     if: always()
     steps:
       - name: Download all artifacts
