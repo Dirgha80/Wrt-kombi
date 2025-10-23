@@ -16,12 +16,13 @@ on:
       releases_branch:
         description: "Select the releases branch"
         required: false
-        default: "openwrt:24.10.3"
+        default: "openwrt:24.10.4"
         type: choice
         options:
           - immortalwrt:24.10.1
           - immortalwrt:24.10.2
           - immortalwrt:23.05.4
+          - openwrt:24.10.4
           - openwrt:24.10.3
           - openwrt:24.10.2
           - openwrt:24.10.1
@@ -771,7 +772,7 @@ jobs:
         uses: ncipollo/release-action@main
         if: success()
         with:
-          tag: HOUJIE-Wrt_all
+          tag: HOUJIE-Wrt_${{ inputs.releases_branch }}_${{ env.BUILD_DATE }}
           artifacts: 'final_release/*'
           allowUpdates: true
           replacesArtifacts: true
