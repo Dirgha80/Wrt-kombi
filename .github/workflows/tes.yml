@@ -194,21 +194,8 @@ jobs:
           esac
           echo "target=$targets" >> $GITHUB_OUTPUT
           echo "Selected targets: $targets"
-  build:
-    needs: prebuild
-    runs-on: ubuntu-24.04
-    if: ${{ github.event.repository.owner.id }} == ${{ github.event.sender.id }}
-    name: "${{ matrix.target }}"
-    strategy:
-      fail-fast: false
-      matrix:
-        target: ${{fromJSON(needs.prebuild.outputs.target)}}
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # Notif saat mulai build
+       # Notif saat mulai build
       - name: Notify Start Build
         run: |
           DATE=$(date +"%Y-%m-%d %H:%M:%S")
@@ -225,7 +212,20 @@ jobs:
           -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
           -d parse_mode="HTML" \
           --data-urlencode text="$MESSAGE"
+          
+  build:
+    needs: prebuild
+    runs-on: ubuntu-24.04
+    if: ${{ github.event.repository.owner.id }} == ${{ github.event.sender.id }}
+    name: "${{ matrix.target }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{fromJSON(needs.prebuild.outputs.target)}}
 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Initialization environment (normal)
         # if: github.event.inputs.target != 'all' && !cancelled()
         env:
